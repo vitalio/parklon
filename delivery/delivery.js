@@ -23,7 +23,7 @@ async function init(){
         $('#menu').empty();
         $('#sub_menu').empty();
         $('#city').val('');
-        set_result('');
+        empty_result();
         city_items = [];
     });
 }
@@ -126,17 +126,18 @@ function select_menu(menu_code, sub_menu_code){
     }
     active_menu_code = menu_code;
     active_sub_menu_code = sub_menu_code;
-    render_result(menu_code, sub_menu_code);
+    set_result(render_result_html(menu_code, sub_menu_code));
 }
 
 const format = d=>{
     d = ''+d;
     return d.length<2 ? '0'+d : d;
 };
-function render_result(menu_code, sub_menu_code){
+
+function get_items(menu_code, sub_menu_code){
     if (!city_items)
-        return;
-    const items = menu_code=='all' ? city_items : city_items.filter(item=>{
+        return [];
+    return menu_code=='all' ? city_items : city_items.filter(item=>{
         if (item.menu!=menu_code)
             return false;
         if (sub_menu_code && sub_menu_code!='all'
@@ -146,7 +147,11 @@ function render_result(menu_code, sub_menu_code){
         }
         return true;
     });
-    set_result(items.map((item, index)=>{
+}
+
+function render_result_html(menu_code, sub_menu_code){
+    let html = '<table class="table table-sm table-striped">';
+    html += get_items(menu_code, sub_menu_code).map((item, i)=>{
         const days = (+item.days||0)+3;
         const d = new Date();
         d.setDate(d.getDate()+days);
@@ -154,12 +159,32 @@ function render_result(menu_code, sub_menu_code){
         const month = d.getMonth()+1;
         const year = d.getFullYear();
         const date = format(day)+'.'+format(month)+'.'+format(year);
-        let address = item.address||item.name||'';
-        address = (''+address).replace(/&nbsp;/g, ' ');
+        let addr = item.address||item.name||'';
+        addr = (''+addr).replace(/&nbsp;/g, ' ');
         let price = item.print_price||'';
         price = (''+price).replace(/&nbsp;/g, '');
-        return (index+1)+') '+address+' '+date+', '+price;
-    }).join('\n'));
+        return `<tr><td>${i+1}</td><td>${addr}</td>`
+            +`<td>${date}</td><td>${price}</td></tr>`;
+    }).join('');
+    html += '</table>';
+    return html;
+}
+
+function render_result_text(menu_code, sub_menu_code){
+    return get_items(menu_code, sub_menu_code).map((item, i)=>{
+        const days = (+item.days||0)+3;
+        const d = new Date();
+        d.setDate(d.getDate()+days);
+        const day = d.getDate();
+        const month = d.getMonth()+1;
+        const year = d.getFullYear();
+        const date = format(day)+'.'+format(month)+'.'+format(year);
+        let addr = item.address||item.name||'';
+        addr = (''+addr).replace(/&nbsp;/g, ' ');
+        let price = item.print_price||'';
+        price = (''+price).replace(/&nbsp;/g, '');
+        return (i+1)+') '+addr+' '+date+', '+price;
+    }).join('\n');
 }
 
 async function load_data(id){
@@ -167,19 +192,22 @@ async function load_data(id){
     return res && res[0];
 }
 
-function set_result(text){
-    $('#result').text(text);
+function set_result(html){
+    $('#result').html(html);
+}
+
+function empty_result(){
+    $('#result').empty();
 }
 
 function copy_result(){
-    const copy_btn = document.getElementById('copy');
-    const copy_text = document.getElementById('result');
     const input = document.createElement('textarea');
-    input.value = copy_text.textContent;
+    input.value = render_result_text(active_menu_code, active_sub_menu_code);
     document.body.appendChild(input);
     input.select();
     document.execCommand('Copy');
     input.remove();
+    const copy_btn =  document.getElementById('copy');
     const tooltip = new bootstrap.Tooltip(copy_btn,
         {title: 'Copied'});
     tooltip.show();
