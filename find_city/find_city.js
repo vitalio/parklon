@@ -10,13 +10,15 @@ async function init(){
         data: cities_datasrc,
         maximumItems: 10,
         treshold: 1,
-        onSelectItem: ({label, value}) =>{
-            console.log('user selected:', label, value);
-            const data = await load_data(value);
-            // set_result(`Label: ${label}\nValue: ${value}\nDate: ${Date.now()}`);
-            copy_result();
-        },
+        onSelectItem: select_city,
     });
+}
+
+async function select_city({label, id}){
+    console.log('user selected:', label, value);
+    const data = await load_data(value);
+    // set_result(`Label: ${label}\nValue: ${value}\nDate: ${Date.now()}`);
+    copy_result();
 }
 
 async function load_data(id){
