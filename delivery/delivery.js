@@ -3,6 +3,7 @@ const {assign} = Object;
 async function init(){
     const res = await fetch('../cities.json');
     const cities = await res.json();
+    // const cities = CITIES;
     const cities_datasrc = [];
     for (const id in cities)
         cities_datasrc.push({label: cities[id], value: id});
@@ -39,6 +40,7 @@ async function select_city({label, value}){
         return;
     set_result('Loading...');
     try {
+        // const data = {routes: ROUTES};
         const data = await load_data(value);
         if (!data)
             throw new Error(`no data for city id ${value}`);
@@ -149,21 +151,27 @@ function get_items(menu_code, sub_menu_code){
     });
 }
 
+function get_item_data(item){
+    const days = (+item.days||0)+3;
+    const d = new Date();
+    d.setDate(d.getDate()+days);
+    const day = d.getDate();
+    const month = d.getMonth()+1;
+    const year = (''+d.getFullYear()).substr(2);
+    const date = format(day)+'.'+format(month)+'.'+format(year);
+    let address = item.address||item.name||'';
+    address = (''+address).replace(/&nbsp;/g, ' ');
+    let price = item.print_price||'';
+    price = (''+price).replace(/&nbsp;/g, '');
+    return {address, date, price};
+}
+
 function render_result_html(menu_code, sub_menu_code){
     let html = '<table class="table table-sm table-striped">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
-        const days = (+item.days||0)+3;
-        const d = new Date();
-        d.setDate(d.getDate()+days);
-        const day = d.getDate();
-        const month = d.getMonth()+1;
-        const year = d.getFullYear();
-        const date = format(day)+'.'+format(month)+'.'+format(year);
-        let addr = item.address||item.name||'';
-        addr = (''+addr).replace(/&nbsp;/g, ' ');
-        let price = item.print_price||'';
-        price = (''+price).replace(/&nbsp;/g, '');
-        return `<tr><td>${i+1}</td><td>${addr}</td>`
+        let {address, date, price} = get_item_data(item);
+        price = price.replace('руб.', '₽');
+        return `<tr><td>${i+1}</td><td>${address}</td>`
             +`<td>${date}</td><td>${price}</td></tr>`;
     }).join('');
     html += '</table>';
@@ -172,18 +180,8 @@ function render_result_html(menu_code, sub_menu_code){
 
 function render_result_text(menu_code, sub_menu_code){
     return get_items(menu_code, sub_menu_code).map((item, i)=>{
-        const days = (+item.days||0)+3;
-        const d = new Date();
-        d.setDate(d.getDate()+days);
-        const day = d.getDate();
-        const month = d.getMonth()+1;
-        const year = d.getFullYear();
-        const date = format(day)+'.'+format(month)+'.'+format(year);
-        let addr = item.address||item.name||'';
-        addr = (''+addr).replace(/&nbsp;/g, ' ');
-        let price = item.print_price||'';
-        price = (''+price).replace(/&nbsp;/g, '');
-        return (i+1)+') '+addr+' '+date+', '+price;
+        const {address, date, price} = get_item_data(item);
+        return (i+1)+') '+address+' '+date+', '+price;
     }).join('\n');
 }
 
