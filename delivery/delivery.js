@@ -1,9 +1,14 @@
 const {assign} = Object;
 
 async function init(){
-    const res = await fetch('../cities.json');
-    const cities = await res.json();
-    // const cities = CITIES;
+    let cities;
+    if (window.CITIES)
+        cities = window.CITIES;
+    else
+    {
+        const res = await fetch('../cities.json');
+        cities = await res.json();
+    }
     const cities_datasrc = [];
     for (const id in cities)
         cities_datasrc.push({label: cities[id], value: id});
@@ -40,8 +45,8 @@ async function select_city({label, value}){
         return;
     set_result('Loading...');
     try {
-        // const data = {routes: ROUTES};
-        const data = await load_data(value);
+        const data = window.ROUTES ? {routes: window.ROUTES}
+            : (await load_data(value));
         if (!data)
             throw new Error(`no data for city id ${value}`);
         const {routes} = data;
