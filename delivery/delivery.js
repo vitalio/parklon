@@ -180,7 +180,7 @@ function copy_result(){
     const tooltip = new bootstrap.Tooltip(copy_btn,
         {title: 'Copied'});
     tooltip.show();
-    setTimeout(()=>tooltip.dispose(), 250);
+    setTimeout(()=>tooltip.dispose(), 400);
 }
 
 $(document).ready(init);
