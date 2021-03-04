@@ -31,40 +31,42 @@ async function select_city({label, value}){
     if (!value)
         return;
     set_result('Loading...');
-    const res = await load_data(value);
-    const data = res && res[0] || {};
-    console.log('data', data);
-    const {routes} = data;
-    if (routes.COURIER && routes.COURIER.length)
-    {
-        menu.courier = {label: 'Курьер', code: 'courier', count: 0};
-        routes.COURIER.forEach(item=>{
-            city_items.push(assign(item, {menu: 'courier'}));
-            menu.all.count++;
-            menu.courier.count++;
-        });
-    }
-    if (routes.PVZ_ALL && routes.PVZ_ALL.length)
-    {
-        menu.pvz = {label: 'Самовывоз', code: 'pvz', count: 0,
-            sub_menu: true};
-        sub_menu.all = {label: 'Все', code: 'all', parent_code: 'pvz',
-            count: 0};
-        routes.PVZ_ALL.forEach(item=>{
-            menu.all.count++;
-            menu.pvz.count++;
-            sub_menu.all.count++;
-            const code = item.delivery_code;
-            city_items.push(assign(item, {menu: 'pvz', sub_menu: code}));
-            if (sub_menu[code])
-                return sub_menu[code].count++;
-            const label = item.name.substr(10);
-            sub_menu[code] = {label, code, count: 1, parent_code: 'pvz'};
-        });
-    }
-    make_menu();
-    select_menu('all');
-    copy_result();
+    try {
+        const res = await load_data(value);
+        const data = res && res[0] || {};
+        console.log('data', data);
+        const {routes} = data;
+        if (routes.COURIER && routes.COURIER.length)
+        {
+            menu.courier = {label: 'Курьер', code: 'courier', count: 0};
+            routes.COURIER.forEach(item=>{
+                city_items.push(assign(item, {menu: 'courier'}));
+                menu.all.count++;
+                menu.courier.count++;
+            });
+        }
+        if (routes.PVZ_ALL && routes.PVZ_ALL.length)
+        {
+            menu.pvz = {label: 'Самовывоз', code: 'pvz', count: 0,
+                sub_menu: true};
+            sub_menu.all = {label: 'Все', code: 'all', parent_code: 'pvz',
+                count: 0};
+            routes.PVZ_ALL.forEach(item=>{
+                menu.all.count++;
+                menu.pvz.count++;
+                sub_menu.all.count++;
+                const code = item.delivery_code;
+                city_items.push(assign(item, {menu: 'pvz', sub_menu: code}));
+                if (sub_menu[code])
+                    return sub_menu[code].count++;
+                const label = item.name.substr(10);
+                sub_menu[code] = {label, code, count: 1, parent_code: 'pvz'};
+            });
+        }
+        make_menu();
+        select_menu('all');
+        copy_result();
+    } catch(e){ set_result('Error: '+e); }
 }
 
 function make_menu(){
