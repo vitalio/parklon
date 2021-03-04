@@ -169,6 +169,7 @@ function set_result(text){
 }
 
 function copy_result(){
+    const copy_btn = document.getElementById('copy');
     const copy_text = document.getElementById('result');
     const input = document.createElement('textarea');
     input.value = copy_text.textContent;
@@ -176,6 +177,10 @@ function copy_result(){
     input.select();
     document.execCommand('Copy');
     input.remove();
+    const tooltip = new bootstrap.Tooltip(copy_btn,
+        {title: 'Copied'});
+    tooltip.show();
+    setTimeout(()=>tooltip.dispose(), 250);
 }
 
 $(document).ready(init);
