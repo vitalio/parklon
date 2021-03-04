@@ -157,7 +157,7 @@ function render_result(menu_code, sub_menu_code){
         let address = item.address||item.name||'';
         address = (''+address).replace(/&nbsp;/g, ' ');
         let price = item.print_price||'';
-        price = (''+price).replace(/&nbsp;/g, ' ');
+        price = (''+price).replace(/&nbsp;/g, '');
         return (index+1)+') '+address+' '+date+' '+price;
     }).join('\n'));
 }
