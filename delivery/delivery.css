@@ -1,4 +1,5 @@
-main { padding-top: 10px; }
+* { font-size: 14px; }
+main {padding-top: 10px; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
 .nav-link { cursor: pointer; }
