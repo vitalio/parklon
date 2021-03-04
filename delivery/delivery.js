@@ -82,7 +82,7 @@ function make_menu(){
         const item = menu[code];
         html += '<li class="nav-item">'
             +`<a class="nav-link" data-menu="${code}">`
-            +`${item.label} (${item.count})</a>`
+            +`${item.label} ${item.count}</a>`
             +'</li>';
     }
     $('#menu').html(html);
@@ -92,7 +92,7 @@ function make_menu(){
         const item = sub_menu[code];
         html += '<li class="nav-item">'
             +`<a class="nav-link" data-menu="${item.parent_code}" `
-            +`data-sub-menu="${item.code}">${item.label} (${item.count})</a>`
+            +`data-sub-menu="${item.code}">${item.label} ${item.count}</a>`
             +'</li>';
     }
     $('#sub_menu').html(html);
