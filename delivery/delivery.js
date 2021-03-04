@@ -147,7 +147,7 @@ function render_result(menu_code, sub_menu_code){
         }
         return true;
     });
-    set_result(items.map(item=>{
+    set_result(items.map((item, index)=>{
         const days = +item.days||0;
         const d = new Date();
         d.setDate(d.getDate()+days);
@@ -157,7 +157,7 @@ function render_result(menu_code, sub_menu_code){
         const date = format(day)+'.'+format(month)+'.'+format(year);
         let address = item.address||item.name||'';
         address = (''+address).replaceAll('&nbsp;', ' ');
-        return address+' '+date+' '+item.print_price;
+        return index+') '+address+' '+date+' '+item.print_price;
     }).join('\n'));
 }
 
