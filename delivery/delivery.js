@@ -157,7 +157,7 @@ function render_result(menu_code, sub_menu_code){
         const date = format(day)+'.'+format(month)+'.'+format(year);
         let address = item.address||item.name||'';
         address = (''+address).replaceAll('&nbsp;', ' ');
-        return index+') '+address+' '+date+' '+item.print_price;
+        return (index+1)+') '+address+' '+date+' '+item.print_price;
     }).join('\n'));
 }
 
