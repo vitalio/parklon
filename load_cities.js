@@ -1,6 +1,7 @@
-const JSONBIN_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkFDZGUxZ3Q5SXpIIiwicGF0aCI6InBhcmtsb24iLCJpYXQiOjE2MTQ3OTY1NzMsImV4cCI6MjQ3ODc5NjU3M30.7NWmTWAi2olBN-0fBQGE5Eal7i-dJ12Hj1pEI9pp3ag';
-const JSONBIN_BASE_URL = 'https://jsonbin.org/vitalio/parklon/';
-const PARKLON_AJAX_URL = 'https://parklon.ru/local/components/dial/regions/ajax.php';
+const RESTDB_API_KEY = '603fe66aacc40f765fede3a8';
+const RESTDB_BASE_URL = 'https://parklon-d6c5.restdb.io/rest/';
+const PARKLON_AJAX_URL = 'https://parklon.ru/local/components/dial/regions/'
+    +'ajax.php';
 
 async function parklon_ajax(data){
     const fd = new FormData();
@@ -19,7 +20,8 @@ async function load_city(id, name){
 	html = await html.text();
 	if (name && !html.includes(name))
 	    throw new Error('');
-	const start_token = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
+	const start_token = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax'
+            +'(';
 	html = html.substr(html.indexOf(start_token)+start_token.length);
 	const end_token = 'JSCustomOrderAjaxArea.init()';
 	html = html.substr(0, html.indexOf(end_token));
@@ -30,53 +32,89 @@ async function load_city(id, name){
 
 const timeout = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 
-async function jsonbin_req(path, method, body){
-    return await fetch(JSONBIN_BASE_URL+path, {method: method||'GET',
-		headers: {authorization: 'Bearer '+JSONBIN_TOKEN},
-		body,
-	});
+async function restdb_req(path, method, body){
+    const res = await fetch(RESTDB_BASE_URL+path, {
+        method: method||'GET',
+        headers: {
+            'x-apikey': RESTDB_API_KEY,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body,
+    });
+    return await res.json();
 }
 
-async function jsonbin_save(path, data){
-    return await jsonbin_req(path, 'POST', JSON.stringify(data));
+async function restdb_update(collection, id, data){
+    return await restdb_req(collection+'/'+id, 'PUT', JSON.stringify(data));
 }
 
-async function jsonbin_make_public(path){
-    return await jsonbin_req(path+'/_perms', 'PUT');
+async function restdb_add(collection, data){
+    return await restdb_req(collection, 'POST', JSON.stringify(data));
 }
 
-async function jsonbin_get_public(path){
-    const res = await fetch(JSONBIN_BASE_URL+path);
-	return await res.json();
+async function restdb_delete(collection, id){
+    return await restdb_req(collection+'/'+id, 'DELETE');
 }
 
-async function load_cities(){
+async function restdb_get_all(collection){
+    return await restdb_req(collection);
+}
+
+async function restdb_get_one(collection, id){
+    return await restdb_req(collection+'/'+id);
+}
+
+async function restdb_query(collection, query){
+    return await restdb_req(collection+'?q='+JSON.stringify(query));
+}
+
+async function restdb_update_or_add(collection, query, data){
+    const res = await restdb_query(collection, query);
+    if (res && res.length)
+        await restdb_update(collection, res[0]._id, data);
+    else
+        await restdb_add(collection, data);
+}
+
+async function get_conf(name){
+    const res = await restdb_query('conf', {name});
+    return res && res[0] && res[0].value;
+}
+
+async function set_conf(name, value){
+	await restdb_update_or_add('conf', {name}, {name, value});
+}
+
+async function load_cities(from){
     const start = Date.now();
-	const cities = await jsonbin_get_public('cities');
+	const cities = await get_conf('cities');
 	console.log(cities);
     const len = Object.keys(cities).length;
     let i = 0, total_size = 0;
     for (const id in cities)
     {
         i++;
-	    console.log(`${i}/${len}`, cities[id], id);
-		try {
+        if (i<from)
+            continue;
+        console.log(`${i}/${len}`, cities[id], id);
+        try {
             const res = await load_city(id);
-		    const data = res.SaleResult.MARSHROUTE;
-			data.city = {id, name: cities[id]}
-			const dur = +((Date.now()-start)/1000).toFixed();
-			const size = JSON.stringify(data).length;
-			total_size += size;
-			console.log('OK', '+'+size+'b', (total_size/1000).toFixed()+'kb',
-			    dur+'s');
-			await jsonbin_save('city/'+id, data);
-			await jsonbin_make_public('city/'+id);
-		} catch(e){ console.log('ERROR', e); }
-		await timeout(100);
-		console.log('');
-	}
-	let dur = +((Date.now()-start)/1000).toFixed();
-	console.log(dur+'s');
+            const data = {id, name: cities[id], routes: res.SaleResult.MARSHROUTE};
+			await restdb_update_or_add('city', {id}, data);
+            const dur = +((Date.now()-start)/1000).toFixed();
+            const size = JSON.stringify(data).length;
+            total_size += size;
+            console.log('OK', '+'+size+'b', (total_size/1000).toFixed()+'kb',
+                dur+'s');
+        } catch(e){ console.log('ERROR', e); }
+        await timeout(100);
+        console.log('');
+    }
+    let dur = +((Date.now()-start)/1000).toFixed();
+    console.log(dur+'s');
 };
 
-await load_cities();
+async function save_cities(cities){
+    await set_conf('cities', cities);
+}
