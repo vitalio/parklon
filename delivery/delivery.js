@@ -72,7 +72,6 @@ async function select_city({label, value}){
         }
         make_menu();
         select_menu('all');
-        copy_result();
     } catch(e){ set_result('Error: '+e); }
 }
 
@@ -156,7 +155,7 @@ function render_result(menu_code, sub_menu_code){
         const year = d.getFullYear();
         const date = format(day)+'.'+format(month)+'.'+format(year);
         let address = item.address||item.name||'';
-        address = (''+address).replaceAll('&nbsp;', ' ');
+        address = (''+address).replace(/&nbsp;/g, ' ');
         return (index+1)+') '+address+' '+date+' '+item.print_price;
     }).join('\n'));
 }
