@@ -155,7 +155,9 @@ function render_result(menu_code, sub_menu_code){
         const month = d.getMonth()+1;
         const year = d.getFullYear();
         const date = format(day)+'.'+format(month)+'.'+format(year);
-        return (item.address||item.name)+' '+date+' '+item.print_price;
+        let address = item.address||item.name||'';
+        address = (''+address).replaceAll('&nbsp;', ' ');
+        return address+' '+date+' '+item.print_price;
     }).join('\n'));
 }
 
