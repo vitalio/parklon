@@ -33,6 +33,7 @@ async function select_city({label, value}){
     set_result('Loading...');
     const res = await load_data(value);
     const data = res && res[0] || {};
+    console.log('data', data);
     const {routes} = data;
     if (routes.COURIER && routes.COURIER.length)
     {
