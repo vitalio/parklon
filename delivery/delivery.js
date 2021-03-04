@@ -2,7 +2,7 @@ const {assign} = Object;
 
 async function init(){
     const res = await fetch('../cities.json');
-    cities = await res.json();
+    const cities = await res.json();
     const cities_datasrc = [];
     for (const id in cities)
         cities_datasrc.push({label: cities[id], value: id});

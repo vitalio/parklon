@@ -92,13 +92,21 @@ class Autocomplete {
 
     this.field.nextSibling.querySelectorAll('.dropdown-item').forEach((item) => {
       item.addEventListener('click', (e) => {
-        let dataValue = e.target.getAttribute('data-value');
-        this.field.value = e.target.innerText;
+        let el = e.target;
+        let dataValue = el.getAttribute('data-value');
+        if (!dataValue)
+        {
+            el = el.parentNode;
+            dataValue = el.getAttribute('data-value');
+        }
+        this.field.value = el.innerText;
         if (this.options.onSelectItem)
+        {
           this.options.onSelectItem({
-            value: e.target.dataset.value,
-            label: e.target.innerText,
+            value: el.dataset.value,
+            label: el.innerText,
           });
+        }
         this.dropdown.hide();
       })
     });
