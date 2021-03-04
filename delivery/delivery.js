@@ -9,7 +9,7 @@ async function init(){
     const ac = new Autocomplete(document.getElementById('city'), {
         data: cities_datasrc,
         maximumItems: 10,
-        treshold: 2,
+        treshold: 1,
         onSelectItem: select_city,
     });
     $('.result').delegate('.nav-link', 'click', function(){
@@ -19,6 +19,13 @@ async function init(){
         select_menu(menu_code, sub_menu_code);
     });
     $('#copy').click(copy_result);
+    $('#clear').click(function(){
+        $('#menu').empty();
+        $('#sub_menu').empty();
+        $('#city').val('');
+        set_result('');
+        city_items = [];
+    });
 }
 
 let menu, sub_menu, active_menu_code, active_sub_menu_code, city_items;
