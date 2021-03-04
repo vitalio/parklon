@@ -14,7 +14,7 @@ async function init(){
     });
 }
 
-async function select_city({label, id}){
+async function select_city({label, value}){
     console.log('user selected:', label, value);
     const data = await load_data(value);
     // set_result(`Label: ${label}\nValue: ${value}\nDate: ${Date.now()}`);
