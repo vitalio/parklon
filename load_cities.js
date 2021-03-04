@@ -100,7 +100,7 @@ async function load_cities(from){
         console.log(`${i}/${len}`, cities[id], id);
         try {
             const res = await load_city(id);
-            const data = {id, name: cities[id], routes: res.SaleResult.MARSHROUTE};
+            const data = {id, name: cities[id], ts: Date.now(), routes: res.SaleResult.MARSHROUTE};
 			await restdb_update_or_add('city', {id}, data);
             const dur = +((Date.now()-start)/1000).toFixed();
             const size = JSON.stringify(data).length;
