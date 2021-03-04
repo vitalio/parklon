@@ -170,7 +170,7 @@ function render_result_html(menu_code, sub_menu_code){
     let html = '<table class="table table-sm table-striped">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
         let {address, date, price} = get_item_data(item);
-        price = price.replace('руб.', '₽');
+        price = price.replace(' руб.', '₽');
         return `<tr><td>${i+1}</td><td>${address}</td>`
             +`<td>${date}</td><td>${price}</td></tr>`;
     }).join('');
