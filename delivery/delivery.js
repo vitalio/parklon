@@ -32,9 +32,9 @@ async function select_city({label, value}){
         return;
     set_result('Loading...');
     try {
-        const res = await load_data(value);
-        const data = res && res[0] || {};
-        console.log('data', data);
+        const data = await load_data(value);
+        if (!data)
+            throw new Error(`no data for city id ${value}`);
         const {routes} = data;
         if (routes.COURIER && routes.COURIER.length)
         {
@@ -154,7 +154,7 @@ function render_result(menu_code, sub_menu_code){
 
 async function load_data(id){
     const res = await restdb_query('city', {id});
-    const data = res && res[0];
+    return res && res[0];
 }
 
 function set_result(text){
