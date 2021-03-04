@@ -9,7 +9,7 @@ async function init(){
     const ac = new Autocomplete(document.getElementById('city'), {
         data: cities_datasrc,
         maximumItems: 10,
-        treshold: 1,
+        treshold: 2,
         onSelectItem: select_city,
     });
     $('.result').delegate('.nav-link', 'click', function(){
@@ -28,7 +28,11 @@ async function select_city({label, value}){
     menu = {all: {label: 'Все', code: 'all', count: 0}};
     sub_menu = {};
     console.log('selected city', label, value);
-    const data = await load_data(value);
+    if (!value)
+        return;
+    set_result('Loading...');
+    const res = await load_data(value);
+    const data = res && res[0] || {};
     const {routes} = data;
     if (routes.COURIER && routes.COURIER.length)
     {
