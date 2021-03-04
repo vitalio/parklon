@@ -148,6 +148,7 @@ function render_result(menu_code, sub_menu_code){
     });
     set_result(items.map((item, index)=>{
         const days = +item.days||0;
+        days += 3;
         const d = new Date();
         d.setDate(d.getDate()+days);
         const day = d.getDate();
