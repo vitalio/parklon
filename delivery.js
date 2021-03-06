@@ -34,6 +34,7 @@ async function init(){
     });
 }
 
+let active_line = 'portable';
 let menu, sub_menu, active_menu_code, active_sub_menu_code, city_items;
 
 async function select_city({label, value}){
@@ -166,16 +167,15 @@ function get_item_data(item){
     const date = format(day)+'.'+format(month)+'.'+format(year);
     let address = item.address||item.name||'';
     address = (''+address).replace(/&nbsp;/g, ' ');
-    let price = item.print_price||'';
-    price = (''+price).replace(/&nbsp;/g, '');
-    return {address, date, price};
+    const {cost} = item;
+    return {address, date, cost};
 }
 
 function render_result_html(menu_code, sub_menu_code){
     let html = '<table class="table table-sm table-striped">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
-        let {address, date, price} = get_item_data(item);
-        price = price.replace(' руб.', '₽');
+        const {address, date, cost} = get_item_data(item);
+        const price = cost ? cost+'₽' : 'бесплатно';
         return `<tr><td>${i+1}</td><td>${address}</td>`
             +`<td>${date}</td><td>${price}</td></tr>`;
     }).join('');
@@ -185,13 +185,14 @@ function render_result_html(menu_code, sub_menu_code){
 
 function render_result_text(menu_code, sub_menu_code){
     return get_items(menu_code, sub_menu_code).map((item, i)=>{
-        const {address, date, price} = get_item_data(item);
+        const {address, date, cost} = get_item_data(item);
+        const price = cost ? cost+' руб.' : 'бесплатно';
         return (i+1)+') '+address+' '+date+', '+price;
     }).join('\n');
 }
 
 async function load_data(id){
-    const res = await restdb_query('city', {id});
+    const res = await get_restdb_by_line(active_line).query('city', {id});
     return res && res[0];
 }
 
