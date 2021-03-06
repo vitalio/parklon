@@ -1,5 +1,3 @@
-const {assign} = Object;
-
 async function init(){
     let cities;
     if (window.CITIES)
