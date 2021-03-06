@@ -385,6 +385,10 @@ async function sync_delivery(opt={}){
         return !opt.line || opt.line==k
             || is_array(opt.line) && opt.line.includes(k);
     });
+    catalog_keys.forEach(line=>{
+        if (!{LINE_TO_RESTDB_INSTANCE}[line])
+            throw new Error(`no db instance for [${line}]`);
+    });
     const lines_len = catalog_keys.length;
     if (!lines_len)
         throw new Error('empty lines');
