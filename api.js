@@ -16,7 +16,7 @@ const LINE_TO_RESTDB_INSTANCE = {
     portable: 'main',
     prime_living: 'db1',
 };
-const RESTDB_DEBUG = true;
+const RESTDB_DEBUG = false;
 
 // util
 
