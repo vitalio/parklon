@@ -1,5 +1,3 @@
-const RESTDB_API_KEY = '603fe66aacc40f765fede3a8';
-const RESTDB_BASE_URL = 'https://parklon-d6c5.restdb.io/rest/';
 const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
 const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
@@ -14,18 +12,27 @@ const RESTDB_INSTANCES = {
     db2: {db: 'parklon-53e1', api_key: '6043e271acc40f765fede495'},
     db3: {db: 'parklon-9de7', api_key: '6043e371acc40f765fede499'},
     db4: {db: 'parklon-db81', api_key: '6043e3efacc40f765fede49d'},
-    db5: {db: '', api_key: ''},
-    db6: {db: '', api_key: ''},
-    db7: {db: '', api_key: ''},
-    db8: {db: '', api_key: ''},
-    db9: {db: '', api_key: ''},
-    db10: {db: '', api_key: ''},
+    db5: {db: 'parklon-d99b', api_key: '6043ea11acc40f765fede4a1'},
+    db6: {db: 'parklon-f6fc', api_key: '6043eb0aacc40f765fede4a5'},
+    db7: {db: 'parklon-526f', api_key: '6043ebadacc40f765fede4a9'},
+    db8: {db: 'parklon-b475', api_key: '6043eddbacc40f765fede4ad'},
+    db9: {db: 'parklon-0084', api_key: '6043ef0dacc40f765fede4b1'},
+    db10: {db: 'parklon-c974', api_key: '6043ef75acc40f765fede4b5'},
 };
 const LINE_TO_RESTDB_INSTANCE = {
     portable: 'main',
     prime_living: 'db1',
+    pure_soft: 'db2',
+    sillky: 'db3',
+    bubble: 'db4',
+    eco_clean: 'db5',
+    bonacomo: 'db6',
+    circle_mat: 'db7',
+    folder: 'db8',
+    rug_maker: 'db9',
 };
 const RESTDB_DEBUG = false;
+const RESTDB_RETRY = 3;
 
 // util
 
@@ -97,19 +104,31 @@ function restdb(name){
 class RestDB {
     constructor(instance){
         assign(this, instance);
+        this.base_url = `https://${this.db}.restdb.io/rest/`;
     }
-    async req(path, method, body){
+    async req(path, method, body, level=0){
         if (RESTDB_DEBUG)
-            console.log(`+ RestDB[${this.db}].req <`, path, method, body);
-        return await fetch_json(`https://${this.db}.restdb.io/rest/${path}`, {
-            method: method||'GET',
-            headers: {
-                'x-apikey': this.api_key,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body,
-        });
+        {
+            console.log(`+ RestDB[${this.db}].req <`, path, method, body,
+                level);
+        }
+        try {
+            return await fetch_json(this.base_url+path, {
+                method: method||'GET',
+                headers: {
+                    'x-apikey': this.api_key,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body,
+            });
+        } catch(e){
+            if (!RESTDB_RETRY || level>=RESTDB_RETRY)
+                throw e;
+            console.error(e);
+            console.log(`retry ${level+1}/${RESTDB_RETRY}`);
+            return await this.req(path, method, body, level+1);
+        }
     }
     async update(coll, id, data){
         return await this.req(coll+'/'+id, 'PUT', JSON.stringify(data));
@@ -332,11 +351,11 @@ async function sync_delivery_for_line(line, opt={}){
     for (const id of cities_keys)
     {
         i++;
-        if (opt.from_city_index && i<opt.from_city_index)
+        if (opt.skip_cities && i<opt.skip_cities)
             continue;
         const name = cities[id];
+        const _start = Date.now();
         try {
-            const _start = Date.now();
             const routes = await get_delivery_routes(id, name, opt);
             const data = {id, line: line.id, routes};
             if (opt.save)
@@ -376,6 +395,10 @@ async function sync_delivery(opt={}){
     const catalog_keys = Object.keys(catalog).filter(k=>{
         return !opt.line || opt.line==k
             || is_array(opt.line) && opt.line.includes(k);
+    });
+    catalog_keys.forEach(line=>{
+        if (!{LINE_TO_RESTDB_INSTANCE}[line])
+            throw new Error(`no db instance for [${line}]`);
     });
     const lines_len = catalog_keys.length;
     if (!lines_len)
