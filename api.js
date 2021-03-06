@@ -14,12 +14,12 @@ const RESTDB_INSTANCES = {
     db2: {db: 'parklon-53e1', api_key: '6043e271acc40f765fede495'},
     db3: {db: 'parklon-9de7', api_key: '6043e371acc40f765fede499'},
     db4: {db: 'parklon-db81', api_key: '6043e3efacc40f765fede49d'},
-    db5: {db: '', api_key: ''},
-    db6: {db: '', api_key: ''},
-    db7: {db: '', api_key: ''},
-    db8: {db: '', api_key: ''},
-    db9: {db: '', api_key: ''},
-    db10: {db: '', api_key: ''},
+    db5: {db: 'parklon-d99b', api_key: '6043ea11acc40f765fede4a1'},
+    db6: {db: 'parklon-f6fc', api_key: '6043eb0aacc40f765fede4a5'},
+    db7: {db: 'parklon-526f', api_key: '6043ebadacc40f765fede4a9'},
+    db8: {db: 'parklon-b475', api_key: '6043eddbacc40f765fede4ad'},
+    db9: {db: 'parklon-0084', api_key: '6043ef0dacc40f765fede4b1'},
+    db10: {db: 'parklon-c974', api_key: '6043ef75acc40f765fede4b5'},
 };
 const LINE_TO_RESTDB_INSTANCE = {
     portable: 'main',
@@ -332,11 +332,11 @@ async function sync_delivery_for_line(line, opt={}){
     for (const id of cities_keys)
     {
         i++;
-        if (opt.from_city_index && i<opt.from_city_index)
+        if (opt.skip_cities && i<opt.skip_cities)
             continue;
         const name = cities[id];
+        const _start = Date.now();
         try {
-            const _start = Date.now();
             const routes = await get_delivery_routes(id, name, opt);
             const data = {id, line: line.id, routes};
             if (opt.save)
