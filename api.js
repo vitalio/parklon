@@ -11,6 +11,15 @@ const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
 const RESTDB_INSTANCES = {
     main: {db: 'parklon-d6c5', api_key: '603fe66aacc40f765fede3a8'},
     db1: {db: 'parklon-f756', api_key: '6043ace5acc40f765fede48c'},
+    db2: {db: 'parklon-53e1', api_key: '6043e271acc40f765fede495'},
+    db3: {db: 'parklon-9de7', api_key: '6043e371acc40f765fede499'},
+    db4: {db: 'parklon-db81', api_key: '6043e3efacc40f765fede49d'},
+    db5: {db: '', api_key: ''},
+    db6: {db: '', api_key: ''},
+    db7: {db: '', api_key: ''},
+    db8: {db: '', api_key: ''},
+    db9: {db: '', api_key: ''},
+    db10: {db: '', api_key: ''},
 };
 const LINE_TO_RESTDB_INSTANCE = {
     portable: 'main',
@@ -310,54 +319,50 @@ async function sync_catalog(){
     console.log('finished sync catalog in', get_dur(start));
 }
 
-async function sync_delivery_for_line_and_city(line, city, opt={}){
-    if (opt.verbose)
-        console.log('+ sync_delivery_for_line_and_city <', line, city, opt);
-    const start = Date.now();
-    if (!opt.start)
-        assign(opt, {start});
-    try {
-        const routes = await get_delivery_routes(city.id, city.name, opt);
-        const data = {id: city.id, line: line.id, routes};
-        if (opt.save)
-            await get_restdb_by_line(line.id).update_or_add('city', {id: city.id}, data);
-        if (!opt.save)
-            console.log(data);
-        else if (opt.verbose)
-            console.log('+ sync_delivery_for_line_and_city >', data);
-        console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-            `${opt.city_i}/${opt.cities_len}`,`[${city.id}]`, city.name,
-            'OK', get_dur(start), get_dur(opt.start));
-    } catch(e){
-        console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-            `${opt.city_i}/${opt.cities_len}`, `[${city.id}]`, city.name,
-            'ERROR', e, get_dur(start), get_dur(opt.start));
-        opt.errors = opt.errors||{};
-        opt.errors[line.id] = opt.errors[line.id]||{};
-        opt.errors[line.id][city.id] = e;
-    }
-}
-
 async function sync_delivery_for_line(line, opt={}){
     if (opt.verbose)
         console.log('+ sync_delivery_for_line <', line, opt);
     const start = Date.now();
     if (!opt.start)
         assign(opt, {start});
-    console.log(`started sync delivery for line [${line.id}]`);
+    console.log(`started sync delivery for [${line.id}]`);
     const {cities, cities_keys} = opt;
+    let errors;
     let i = 0;
     for (const id of cities_keys)
     {
         i++;
         if (opt.from_city_index && i<opt.from_city_index)
             continue;
-        await sync_delivery_for_line_and_city(line, {id, name: cities[id]},
-            assign(opt, {city_i: i}));
+        const name = cities[id];
+        try {
+            const _start = Date.now();
+            const routes = await get_delivery_routes(id, name, opt);
+            const data = {id, line: line.id, routes};
+            if (opt.save)
+            {
+                await get_restdb_by_line(line.id).update_or_add('city', {id},
+                    data);
+            }
+            if (!opt.save)
+                console.log(data);
+            else if (opt.verbose)
+                console.log('+ sync_delivery_for_line >', data);
+            console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
+                `${i}/${opt.cities_len}`,`[${id}]`, name,
+                'OK', get_dur(_start), get_dur(opt.start));
+        } catch(e){
+            console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
+                `${i}/${opt.cities_len}`, `[${id}]`, name,
+                'ERROR', e, get_dur(_start), get_dur(opt.start));
+            errors = errors||{};
+            errors[id] = e;
+        }
         if (opt.wait)
             await wait(opt.wait);
     }
     console.log('finished sync delivery by cities in', get_dur(start));
+    return {errors};
 }
 
 async function sync_delivery(opt={}){
@@ -386,6 +391,7 @@ async function sync_delivery(opt={}){
     if (!cities_len)
         throw new Error('empty cities');
     assign(opt, {cities, cities_keys, cities_len, lines_len});
+    const errors = {};
     let i = 0;
     for (const id of catalog_keys)
     {
@@ -394,8 +400,8 @@ async function sync_delivery(opt={}){
         const line = catalog[id];
         const prod = line.products[0].id;
         console.log(`adding product [${prod}] to basket...`);
-        const res = await add_to_basket(prod);
-        if (!res.result=='success')
+        const basket_res = await add_to_basket(prod);
+        if (basket_res.result!='success')
             throw new Error(`failed add to basket prod [${prod}]`);
         console.log('product added');
         console.log('getting basket ID...');
@@ -403,12 +409,15 @@ async function sync_delivery(opt={}){
         if (!basket_id)
             throw new Error(`failed get basket ID prod [${prod}]`);
         console.log(`got basket ID [${basket_id}]`);
-        await sync_delivery_for_line(line, assign(opt, {line_i: i}));
+        const res = await sync_delivery_for_line(line,
+            assign(opt, {line_i: i}));
+        if (res.errors)
+            errors[id] = res.errors;
         console.log(`deleting from basket [${basket_id}]...`);
         await del_from_basket(basket_id);
         console.log('basket is empty');
     }
-    if (opt.errors)
-        console.log('errors', opt.errors);
+    if (Object.keys(errors).length)
+        console.log('errors', errors);
     console.log('finished sync delivery in', get_dur(start));
 }
