@@ -1,5 +1,3 @@
-const RESTDB_API_KEY = '603fe66aacc40f765fede3a8';
-const RESTDB_BASE_URL = 'https://parklon-d6c5.restdb.io/rest/';
 const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
 const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
@@ -34,6 +32,7 @@ const LINE_TO_RESTDB_INSTANCE = {
     rug_maker: 'db9',
 };
 const RESTDB_DEBUG = false;
+const RESTDB_RETRY = 3;
 
 // util
 
@@ -105,19 +104,31 @@ function restdb(name){
 class RestDB {
     constructor(instance){
         assign(this, instance);
+        this.base_url = `https://${this.db}.restdb.io/rest/`;
     }
-    async req(path, method, body){
+    async req(path, method, body, level=0){
         if (RESTDB_DEBUG)
-            console.log(`+ RestDB[${this.db}].req <`, path, method, body);
-        return await fetch_json(`https://${this.db}.restdb.io/rest/${path}`, {
-            method: method||'GET',
-            headers: {
-                'x-apikey': this.api_key,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body,
-        });
+        {
+            console.log(`+ RestDB[${this.db}].req <`, path, method, body,
+                level);
+        }
+        try {
+            return await fetch_json(this.base_url+path, {
+                method: method||'GET',
+                headers: {
+                    'x-apikey': this.api_key,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body,
+            });
+        } catch(e){
+            if (!RESTDB_RETRY || level>=RESTDB_RETRY)
+                throw e;
+            console.error(e);
+            console.log(`retry ${level+1}/${RESTDB_RETRY}`);
+            return await this.req(path, method, body, level+1);
+        }
     }
     async update(coll, id, data){
         return await this.req(coll+'/'+id, 'PUT', JSON.stringify(data));
