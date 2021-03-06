@@ -4,7 +4,7 @@ async function init(){
         cities = window.CITIES;
     else
     {
-        const res = await fetch('../cities.json');
+        const res = await fetch('./cities.json');
         cities = await res.json();
     }
     const cities_datasrc = [];
