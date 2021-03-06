@@ -24,6 +24,14 @@ const RESTDB_INSTANCES = {
 const LINE_TO_RESTDB_INSTANCE = {
     portable: 'main',
     prime_living: 'db1',
+    pure_soft: 'db2',
+    sillky: 'db3',
+    bubble: 'db4',
+    eco_clean: 'db5',
+    bonacomo: 'db6',
+    circle_mat: 'db7',
+    folder: 'db8',
+    rug_maker: 'db9',
 };
 const RESTDB_DEBUG = false;
 
