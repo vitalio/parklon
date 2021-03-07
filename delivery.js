@@ -16,14 +16,14 @@ async function init(){
             onSelectItem: select_city,
         });
         init_catalog();
-        $('.result').delegate('.nav-link', 'click', function(){
+        $('main .result').delegate('.nav-link', 'click', function(){
             const el = $(this);
             const menu_code = el.data('menu');
             const sub_menu_code = el.data('sub-menu');
             select_menu(menu_code, sub_menu_code);
         });
-        $('#copy').click(copy_result);
-        $('#clear').click(deselect_city);
+        $('main').delegate('#copy', 'click', copy_result);
+        $('main').delegate('#clear', 'click', deselect_city);
         $('main').show();
         if (active_type)
             select_type(active_type);
@@ -263,11 +263,9 @@ const copy_result = ()=>{
     input.select();
     document.execCommand('Copy');
     input.remove();
-    const copy_btn =  document.getElementById('copy');
-    const tooltip = new bootstrap.Tooltip(copy_btn,
-        {title: 'Copied'});
-    tooltip.show();
-    setTimeout(()=>tooltip.dispose(), 400);
+    $('#copy').text('Copied');
+    console.log('copied');
+    setTimeout(()=>$('#copy').text('Copy'), 250);
 };
 
 $(document).ready(init);
