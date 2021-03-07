@@ -192,11 +192,16 @@ async function get_delivery_routes(city_id, city_name, opt={}){
     if (opt.verbose)
         console.log('+ get_delivery_routes >', res);
     const routes = res.SaleResult.MARSHROUTE;
+    let cost_min, cost_max;
     for (const id in routes)
     {
         routes[id] = routes[id].map(r=>{
             const route = {};
             route.cost = +r.cost;
+            if (cost_min===undefined || route.cost<cost_min)
+                cost_min = route.cost;
+            if (cost_max===undefined || route.cost>cost_max)
+                cost_max = route.cost;
             route.days = +r.days; 
             if_set(r.name, route, 'name');
             if_set(r.delivery_code, route, 'code'); 
@@ -207,7 +212,7 @@ async function get_delivery_routes(city_id, city_name, opt={}){
             return route;
         });
     }
-    return routes;
+    return {routes, cost_min, cost_max};
 }
 
 // cities
@@ -356,8 +361,9 @@ async function sync_delivery_for_line(line, opt={}){
         const name = cities[id];
         const _start = Date.now();
         try {
-            const routes = await get_delivery_routes(id, name, opt);
-            const data = {id, line: line.id, routes};
+            const {routes, cost_min, cost_max} = await get_delivery_routes(id,
+                name, opt);
+            const data = {id, line: line.id, cost_min, cost_max, routes};
             if (opt.save)
             {
                 await get_restdb_by_line(line.id).update_or_add('city', {id},
@@ -367,12 +373,13 @@ async function sync_delivery_for_line(line, opt={}){
                 console.log(data);
             else if (opt.verbose)
                 console.log('+ sync_delivery_for_line >', data);
+            const cost_range = cost_min+'-'+cost_max;
             console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name,
+                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range,
                 'OK', get_dur(_start), get_dur(opt.start));
         } catch(e){
             console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name,
+                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range,
                 'ERROR', e, get_dur(_start), get_dur(opt.start));
             errors = errors||{};
             errors[id] = e;
