@@ -68,7 +68,7 @@ async function select_city({label, value}){
                 menu.all.count++;
                 menu.pvz.count++;
                 sub_menu.all.count++;
-                const code = item.delivery_code;
+                const {code} = item;
                 city_items.push(assign(item, {menu: 'pvz', sub_menu: code}));
                 if (sub_menu[code])
                     return sub_menu[code].count++;
@@ -76,12 +76,12 @@ async function select_city({label, value}){
                 sub_menu[code] = {label, code, count: 1, parent_code: 'pvz'};
             });
         }
-        make_menu();
+        render_menu();
         select_menu('all');
     } catch(e){ set_result('Error: '+e); }
 }
 
-function make_menu(){
+function render_menu(){
     let html = '';
     for (const code in menu)
     {
