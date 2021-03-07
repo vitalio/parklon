@@ -1,3 +1,4 @@
+/*jshint esversion: 8*/
 const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
 const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
@@ -18,18 +19,26 @@ const RESTDB_INSTANCES = {
     db8: {db: 'parklon-b475', api_key: '6043eddbacc40f765fede4ad'},
     db9: {db: 'parklon-0084', api_key: '6043ef0dacc40f765fede4b1'},
     db10: {db: 'parklon-c974', api_key: '6043ef75acc40f765fede4b5'},
+    db11: {db: 'parklon-dd09', api_key: '6044cc2aacc40f765fede4d7'},
+    db12: {db: 'parklon-da30', api_key: '6044ccceacc40f765fede4db'},
+    db13: {db: 'parklon-359c', api_key: '6044ce16acc40f765fede4df'},
+    db14: {db: 'parklon-af08', api_key: '6044d5daacc40f765fede4e3'},
 };
-const LINE_TO_RESTDB_INSTANCE = {
-    portable: 'main',
-    prime_living: 'db1',
-    pure_soft: 'db2',
-    sillky: 'db3',
-    bubble: 'db4',
-    eco_clean: 'db5',
-    bonacomo: 'db6',
-    circle_mat: 'db7',
-    folder: 'db8',
-    rug_maker: 'db9',
+const PRODUCT_TYPE_TO_RESTDB_INSTANCE = {
+    '138x138 см,1.2 см,PVC': 'db1',
+    '190x130 см,1.2 см,PVC': 'db2',
+    '190x130 см,3 см,PVC/PU': 'db3',
+    '200x140 см,1 см,PE': 'db4',
+    '200x140 см,4 см,PVC/PU': 'db5',
+    '200x140 см,15 см,PVC/PU': 'db6',
+    '200x150 см,1 см,PE': 'db7',
+    '200x150 см,1 см,TPU': 'db8',
+    '200x180 см,1 см,PE': 'db9',
+    '200x180 см,1.5 см,PE': 'db10',
+    '210x140 см,1.3 см,PVC/PE': 'db11',
+    '230x140 см,1.2 см,PE': 'db12',
+    '235x140 см,4 см,PVC/PU': 'db13',
+    '250x140 см,1.5 см,PVC': 'db14',
 };
 const RESTDB_DEBUG = false;
 const RESTDB_RETRY = 3;
@@ -41,7 +50,7 @@ const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const get_el_text = el=>el && el.textContent && el.textContent.trim();
 const init_parse_html = html=>{
     const parse_range = document.createRange();
-    return parse = Range.prototype.createContextualFragment.bind(parse_range);
+    return Range.prototype.createContextualFragment.bind(parse_range);
 };
 const parse_html = init_parse_html();
 const if_set = (val, o, name)=>{
@@ -86,8 +95,8 @@ async function fetch_json(url, opt){
 
 // restdb
 
-function get_restdb_by_line(line){
-    return restdb(LINE_TO_RESTDB_INSTANCE[line]);
+function get_restdb_by_type(type){
+    return restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
 }
 
 function restdb(name){
@@ -168,6 +177,13 @@ async function set_conf(name, value){
     await restdb('main').update_or_add('conf', {name}, {name, value});
 }
 
+async function get_all_conf(){
+    const res = await restdb('main').get_all('conf');
+    const conf = {};
+    res.forEach(c=>conf[c.name] = c.value);
+    return conf;
+}
+
 // order
 
 async function get_order_data(city_name){
@@ -215,7 +231,7 @@ async function get_delivery_routes(city_id, city_name, opt={}){
     return {routes, cost_min, cost_max};
 }
 
-// cities
+// city
 
 async function get_cities(){
     const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
@@ -301,10 +317,30 @@ async function get_products(line){
             if (img && img.src)
                 imgs.push(img.src);
         }
-        products.push({id, category, title, imgs, sizes, price, url});
+        const type = sizes.map(s=>s.value).join(',');
+        products.push({id, type, line: line.id, category, title, imgs, sizes,
+            price, url});
     }
     return products;
 }
+
+const get_products_by_type = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.type] = res[p.type]||[];
+        res[p.type].push(p);
+    });
+    return res;
+};
+
+const get_products_by_line = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.line] = res[p.line]||[];
+        res[p.line].push(p);
+    });
+    return res;
+};
 
 // sync
 
@@ -321,35 +357,40 @@ async function sync_cities(){
     console.log('finished sync cities in', get_dur(start));
 }
 
-async function sync_catalog(){
+async function sync_products(){
     const start = Date.now();
-    console.log('started sync catalog');
-    console.log('loading product lines...');
+    console.log('started sync products');
+    console.log('getting product lines...');
     const lines = await get_product_lines();
     console.log(`got [${lines.length}] product lines`, lines);
-    const catalog = {};
+    const products = [], types = [];
     for (const line of lines)
     {
-        const products = await get_products(line);
-        console.log(`line [${line.id}] has ${products.length} products`,
-            products);
-        if (products.length)
-            catalog[line.id] = assign({}, line, {products});
+        console.log(`getting products for [${line.id}]...`);
+        const _products = await get_products(line);
+        _products.forEach(p=>{
+            if (!types.includes(p.type))
+                types.push(p.type);
+        });
+        Array.prototype.push.apply(products, _products);
+        console.log(`got [${_products.length}] products for [${line.id}]`,
+            _products);
     }
-    console.log(`saving catalog [${Object.keys(catalog).length}] to conf...`,
-        catalog);
-    await set_conf('catalog', catalog);
-    console.log('catalog saved');
-    console.log('finished sync catalog in', get_dur(start));
+    console.log(`got total [${products.length}] products of`,
+        `[${types.length}] types`, products, types);
+    console.log('saving products in conf...');
+    await set_conf('products', products);
+    console.log('saved products in conf');
+    console.log('finished sync products', get_dur(start));
 }
 
-async function sync_delivery_for_line(line, opt={}){
+async function sync_delivery_for_type(type, opt={}){
     if (opt.verbose)
-        console.log('+ sync_delivery_for_line <', line, opt);
+        console.log('+ sync_delivery_for_type <', type, opt);
     const start = Date.now();
     if (!opt.start)
         assign(opt, {start});
-    console.log(`started sync delivery for [${line.id}]`);
+    console.log(`started sync delivery for [${type}]`);
     const {cities, cities_keys} = opt;
     let errors;
     let i = 0;
@@ -363,23 +404,23 @@ async function sync_delivery_for_line(line, opt={}){
         try {
             const {routes, cost_min, cost_max} = await get_delivery_routes(id,
                 name, opt);
-            const data = {id, line: line.id, cost_min, cost_max, routes};
+            const data = {id, type, cost_min, cost_max, routes};
             if (opt.save)
             {
-                await get_restdb_by_line(line.id).update_or_add('city', {id},
+                await get_restdb_by_type(type).update_or_add('city', {id},
                     data);
             }
             if (!opt.save)
                 console.log(data);
             else if (opt.verbose)
-                console.log('+ sync_delivery_for_line >', data);
+                console.log('+ sync_delivery_for_type >', data);
             const cost_range = cost_min+'-'+cost_max;
-            console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range,
+            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range, '₽',
                 'OK', get_dur(_start), get_dur(opt.start));
         } catch(e){
-            console.log(`${opt.line_i}/${opt.lines_len}`, `[${line.id}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range,
+            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range, '₽',
                 'ERROR', e, get_dur(_start), get_dur(opt.start));
             errors = errors||{};
             errors[id] = e;
@@ -387,7 +428,8 @@ async function sync_delivery_for_line(line, opt={}){
         if (opt.wait)
             await wait(opt.wait);
     }
-    console.log('finished sync delivery by cities in', get_dur(start));
+    console.log(`finished sync delivery for type [${type}] in`,
+        get_dur(start));
     return {errors};
 }
 
@@ -396,23 +438,22 @@ async function sync_delivery(opt={}){
     if (!opt.start)
         assign(opt, {start});
     console.log('started sync delivery');
-    const catalog = await get_conf('catalog');
-    if (!catalog)
-        throw new Error('no catalog');
-    const catalog_keys = Object.keys(catalog).filter(k=>{
-        return !opt.line || opt.line==k
-            || is_array(opt.line) && opt.line.includes(k);
-    });
-    catalog_keys.forEach(line=>{
-        if (!LINE_TO_RESTDB_INSTANCE[line])
-            throw new Error(`no db instance for [${line}]`);
-    });
-    const lines_len = catalog_keys.length;
-    if (!lines_len)
-        throw new Error('empty lines');
-    const cities = await get_conf('cities');
+    const {cities, products} = await get_all_conf();
+    if (!products)
+        throw new Error('no products');
     if (!cities)
         throw new Error('no cities');
+    const type2products = get_products_by_type(products);
+    const types = Object.keys(type2products).filter(t=>{
+        return !opt.type || opt.type==t
+            || is_array(opt.type) && opt.type.includes(t);
+    });
+    types.forEach(type=>{
+        if (!PRODUCT_TYPE_TO_RESTDB_INSTANCE[type])
+            throw new Error(`no db instance for [${type}]`);
+    });
+    if (!types.length)
+        throw new Error('empty types');
     const cities_keys = Object.keys(cities).filter(k=>{
         return !opt.city || opt.city==k
             || is_array(opt.city) && opt.city.includes(k);
@@ -420,15 +461,14 @@ async function sync_delivery(opt={}){
     const cities_len = cities_keys.length;
     if (!cities_len)
         throw new Error('empty cities');
-    assign(opt, {cities, cities_keys, cities_len, lines_len});
+    assign(opt, {cities, cities_keys, cities_len, types_len: types.length});
     const errors = {};
     let i = 0;
-    for (const id of catalog_keys)
+    for (const type of types)
     {
         i++;
-        console.log(`process product line [${id}] ${i}/${lines_len}`);
-        const line = catalog[id];
-        const prod = line.products[0].id;
+        console.log(`process type [${type}] ${i}/${types.length}`);
+        const prod = type2products[type][0].id;
         console.log(`adding product [${prod}] to basket...`);
         const basket_res = await add_to_basket(prod);
         if (basket_res.result!='success')
@@ -439,8 +479,8 @@ async function sync_delivery(opt={}){
         if (!basket_id)
             throw new Error(`failed get basket ID prod [${prod}]`);
         console.log(`got basket ID [${basket_id}]`);
-        const res = await sync_delivery_for_line(line,
-            assign(opt, {line_i: i}));
+        const res = await sync_delivery_for_type(type,
+            assign(opt, {type_i: i}));
         if (res.errors)
             errors[id] = res.errors;
         console.log(`deleting from basket [${basket_id}]...`);

@@ -13,23 +13,32 @@
   <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
   <script src="./autocomplete.js?v=2"></script>
   <!--<script src="./test_data.js"></script>-->
-  <script src="./api.js?v=1"></script>
-  <link href="./delivery.css?v=12" rel="stylesheet">
+  <script src="./api.js?v=2"></script>
+  <link href="./delivery.css?v=13" rel="stylesheet">
 <body>
+  <article id="error" class="container text-danger"></article>
+  <article id="loading" class="container">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </article>
   <main class="container">
-    <div class="row">
-      <div class="col"><input type="text" class="form-control" id="city"></div>
-      <div class="col">
-        <button id="copy" class="btn btn-primary">Copy</button>
-        <button id="clear" class="btn btn-light">Clear</button>
+    <article class="mb-2" id="catalog"></article>
+    <article id="delivery">
+      <div class="row">
+        <div class="col"><input type="text" class="form-control" id="city"></div>
+        <div class="col">
+          <button id="copy" class="btn btn-primary">Copy</button>
+          <button id="clear" class="btn btn-light">Clear</button>
+        </div>
       </div>
-    </div>
-    <div class="result">
-      <ul class="nav nav-tabs" id="menu"></ul>
-      <ul class="nav nav-pills" id="sub_menu"></ul>
-      <div id="result"></div>
-    </div>
+      <div class="result">
+        <ul class="nav nav-tabs" id="menu"></ul>
+        <ul class="nav nav-pills" id="sub_menu"></ul>
+        <div id="result"></div>
+      </div>
+    </article>
   </main>
-  <script src="./delivery.js?v=27"></script>
+  <script src="./delivery.js?v=28"></script>
 </body>
 </html>

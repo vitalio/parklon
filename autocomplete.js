@@ -1,3 +1,4 @@
+/*jshint esversion: 6*/
 const DEFAULTS = {
   treshold: 2,
   maximumItems: 5,

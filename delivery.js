@@ -1,39 +1,97 @@
+/*jshint esversion: 8*/
+let conf;
+
 async function init(){
-    let cities;
-    if (window.CITIES)
-        cities = window.CITIES;
-    else
-    {
-        const res = await fetch('./cities.json');
-        cities = await res.json();
+    try {
+        conf = window.CONF || await get_all_conf();
+        conf.type2products = get_products_by_type(conf.products);
+        console.log('conf', conf);
+        const cities_datasrc = [];
+        for (const id in conf.cities)
+            cities_datasrc.push({label: conf.cities[id], value: id});
+        const ac = new Autocomplete(document.getElementById('city'), {
+            data: cities_datasrc,
+            maximumItems: 10,
+            treshold: 1,
+            onSelectItem: select_city,
+        });
+        init_catalog();
+        $('.result').delegate('.nav-link', 'click', function(){
+            const el = $(this);
+            const menu_code = el.data('menu');
+            const sub_menu_code = el.data('sub-menu');
+            select_menu(menu_code, sub_menu_code);
+        });
+        $('#copy').click(copy_result);
+        $('#clear').click(deselect_city);
+        $('main').show();
+        if (active_type)
+            select_type(active_type);
+        else
+            deselect_type();
+        $('#loading').hide();
+    } catch(e){
+        set_fatal_error(e);
     }
-    const cities_datasrc = [];
-    for (const id in cities)
-        cities_datasrc.push({label: cities[id], value: id});
-    const ac = new Autocomplete(document.getElementById('city'), {
-        data: cities_datasrc,
-        maximumItems: 10,
-        treshold: 1,
-        onSelectItem: select_city,
-    });
-    $('.result').delegate('.nav-link', 'click', function(){
-        const el = $(this);
-        const menu_code = el.data('menu');
-        const sub_menu_code = el.data('sub-menu');
-        select_menu(menu_code, sub_menu_code);
-    });
-    $('#copy').click(copy_result);
-    $('#clear').click(function(){
-        $('#menu').empty();
-        $('#sub_menu').empty();
-        $('#city').val('');
-        empty_result();
-        city_items = [];
-    });
 }
 
-let active_line = 'portable';
+const set_fatal_error = e=>{
+    console.error(e);
+    $('#error').text(e);
+    $('#loading, main').hide();
+};
+
+const init_catalog = ()=>{
+    let html = '<div class="list-group">';
+    for (const type in conf.type2products)
+    {
+        const prod = conf.type2products[type][0];
+        const titles = conf.type2products[type].map(p=>p.title).join(',');
+        html += '<a class="list-group-item list-group-item-action" '
+            +`data-type="${type}">`
+            +'<div class="d-flex w-100 justify-content-between">'
+            +`<h5 class="mb-1">${type}</h5>`
+            +`<small>${prod.price}</small>`
+            +'</div>'
+            +`<small>${titles}</small>`
+            +'</a>';
+    }
+    html += '</div>';
+    $('#catalog').html(html);
+    $('#catalog').delegate('a.list-group-item', 'click', function(){
+        const el = $(this);
+        const type = el.data('type');
+        if (type==active_type)
+            return deselect_type();
+        select_type(type);
+    });
+};
+
+const deselect_type = ()=>{
+    $('#catalog a.list-group-item').removeClass('active').show();
+    $('#delivery').hide();
+    active_type = null;
+    deselect_city();
+};
+
+const select_type = type=>{
+    $('#catalog a.list-group-item').removeClass('active');
+    $(`#catalog a.list-group-item[data-type="${type}"]`).addClass('active');
+    $('#catalog a.list-group-item').not('.active').hide();
+    $('#delivery').show();
+    active_type = type;
+};
+
+let active_type = '200x140 см,1 см,PE';
 let menu, sub_menu, active_menu_code, active_sub_menu_code, city_items;
+
+const deselect_city = ()=>{
+    $('#menu').empty();
+    $('#sub_menu').empty();
+    $('#city').val('');
+    empty_result();
+    city_items = [];
+};
 
 async function select_city({label, value}){
     city_items = [];
@@ -78,10 +136,10 @@ async function select_city({label, value}){
         }
         render_menu();
         select_menu('all');
-    } catch(e){ set_result('Error: '+e); }
+    } catch(e){ set_result(e); }
 }
 
-function render_menu(){
+const render_menu = ()=>{
     let html = '';
     for (const code in menu)
     {
@@ -102,9 +160,9 @@ function render_menu(){
             +'</li>';
     }
     $('#sub_menu').html(html);
-}
+};
 
-function select_menu(menu_code, sub_menu_code){
+const select_menu = (menu_code, sub_menu_code)=>{
     console.log('select menu', menu_code, sub_menu_code);
     const active_menu = menu[menu_code];
     if (active_menu.sub_menu && !sub_menu_code)
@@ -116,31 +174,31 @@ function select_menu(menu_code, sub_menu_code){
         $('#sub_menu').hide();
     if (active_menu_code)
     {
-        $(`#menu .nav-link[data-menu=${active_menu_code}]`)
+        $(`#menu .nav-link[data-menu="${active_menu_code}"]`)
             .removeClass('active');
     }
-    $(`#menu .nav-link[data-menu=${menu_code}]`).addClass('active');
+    $(`#menu .nav-link[data-menu="${menu_code}"]`).addClass('active');
     if (active_sub_menu_code)
     {
-        $(`#sub_menu .nav-link[data-sub-menu=${active_sub_menu_code}]`)
+        $(`#sub_menu .nav-link[data-sub-menu="${active_sub_menu_code}"]`)
             .removeClass('active');
     }
     if (sub_menu_code)
     {
-        $(`#sub_menu .nav-link[data-sub-menu=${sub_menu_code}]`)
+        $(`#sub_menu .nav-link[data-sub-menu="${sub_menu_code}"]`)
             .addClass('active');
     }
     active_menu_code = menu_code;
     active_sub_menu_code = sub_menu_code;
     set_result(render_result_html(menu_code, sub_menu_code));
-}
+};
 
 const format = d=>{
     d = ''+d;
     return d.length<2 ? '0'+d : d;
 };
 
-function get_items(menu_code, sub_menu_code){
+const get_items = (menu_code, sub_menu_code)=>{
     if (!city_items)
         return [];
     return menu_code=='all' ? city_items : city_items.filter(item=>{
@@ -153,9 +211,9 @@ function get_items(menu_code, sub_menu_code){
         }
         return true;
     });
-}
+};
 
-function get_item_data(item){
+const get_item_data = item=>{
     const days = (+item.days||0)+3;
     const d = new Date();
     d.setDate(d.getDate()+days);
@@ -167,9 +225,9 @@ function get_item_data(item){
     address = (''+address).replace(/&nbsp;/g, ' ');
     const {cost} = item;
     return {address, date, cost};
-}
+};
 
-function render_result_html(menu_code, sub_menu_code){
+const render_result_html = (menu_code, sub_menu_code)=>{
     let html = '<table class="table table-sm table-striped">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
         const {address, date, cost} = get_item_data(item);
@@ -179,30 +237,26 @@ function render_result_html(menu_code, sub_menu_code){
     }).join('');
     html += '</table>';
     return html;
-}
+};
 
-function render_result_text(menu_code, sub_menu_code){
+const render_result_text = (menu_code, sub_menu_code)=>{
     return get_items(menu_code, sub_menu_code).map((item, i)=>{
         const {address, date, cost} = get_item_data(item);
         const price = cost ? cost+' руб.' : 'бесплатно';
         return (i+1)+') '+address+' '+date+', '+price;
     }).join('\n');
-}
+};
 
 async function load_data(id){
-    const res = await get_restdb_by_line(active_line).query('city', {id});
+    const res = await get_restdb_by_type(active_type).query('city', {id});
     return res && res[0];
 }
 
-function set_result(html){
-    $('#result').html(html);
-}
+const set_result = html=>$('#result').html(html);
 
-function empty_result(){
-    $('#result').empty();
-}
+const empty_result = ()=>$('#result').empty();
 
-function copy_result(){
+const copy_result = ()=>{
     const input = document.createElement('textarea');
     input.value = render_result_text(active_menu_code, active_sub_menu_code);
     document.body.appendChild(input);
@@ -214,6 +268,6 @@ function copy_result(){
         {title: 'Copied'});
     tooltip.show();
     setTimeout(()=>tooltip.dispose(), 400);
-}
+};
 
 $(document).ready(init);

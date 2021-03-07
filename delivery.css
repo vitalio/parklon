@@ -1,5 +1,6 @@
 * { font-size: 14px; }
-main {padding-top: 10px; }
+body { padding-top: 10px; }
+main { display: none; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
-.nav-link { cursor: pointer; }
+a { cursor: pointer; }
