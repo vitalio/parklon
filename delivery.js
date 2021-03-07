@@ -46,7 +46,7 @@ const init_catalog = ()=>{
     for (const type in conf.type2products)
     {
         const prod = conf.type2products[type][0];
-        const titles = conf.type2products[type].map(p=>p.title).join(',');
+        const titles = conf.type2products[type].map(p=>p.title).join(', ');
         html += '<a class="list-group-item list-group-item-action" '
             +`data-type="${type}">`
             +'<div class="d-flex w-100 justify-content-between">'
