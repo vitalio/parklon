@@ -191,10 +191,10 @@ class Scrapper {
         let html = await custom_fetch(PARKLON_ORDER_URL);
         if (city_name && !html.includes(city_name))
             throw new Error('');
-        const start_token = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
-        html = html.substr(html.indexOf(start_token)+start_token.length);
-        const end_token = 'JSCustomOrderAjaxArea.init()';
-        html = html.substr(0, html.indexOf(end_token));
+        const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
+        html = html.substr(html.indexOf(token_s)+token_s.length);
+        const token_e = 'JSCustomOrderAjaxArea.init()';
+        html = html.substr(0, html.indexOf(token_e));
         html = html.trim();
         html = html.substr(0, html.length-2);
         return (new Function('return '+html))();
@@ -218,9 +218,9 @@ class Scrapper {
                     cost_min = route.cost;
                 if (cost_max===undefined || route.cost>cost_max)
                     cost_max = route.cost;
-                route.days = +r.days; 
+                route.days = +r.days;
                 if_set(r.name, route, 'name');
-                if_set(r.delivery_code, route, 'code'); 
+                if_set(r.delivery_code, route, 'code');
                 if_set(r.place_id, route, 'place_id');
                 if_set(r.gps, route, 'gps');
                 if_set(r.phone, route, 'phone');
@@ -294,23 +294,21 @@ class Scrapper {
             const price = get_el_text(
                 prod.querySelector('.popular-carpets__price'));
             const sizes = [];
-            for (const o of prod.querySelectorAll('.popular-carpets__sizes')||[])
-            {
+            (prod.querySelectorAll('.popular-carpets__sizes')||[]).forEach(o=>{
                 const childs = o.children||[];
                 const name = get_el_text(childs[0]);
                 const value = get_el_text(childs[1]);
                 if (name||value)
                     sizes.push({name, value});
-            }
+            });
             const imgs = [];
-            for (const img of prod.querySelectorAll('.catalog-item__img img')||[])
-            {
-                if (img && img.src)
-                    imgs.push(img.src);
-            }
+            (prod.querySelectorAll('.catalog-item__img img')||[]).forEach(o=>{
+                if (o && o.src)
+                    imgs.push(o.src);
+            });
             const type = sizes.map(s=>s.value).join(',');
-            products.push({id, type, line: line.id, category, title, imgs, sizes,
-                price, url});
+            products.push({id, type, line: line.id, category, title, imgs,
+                sizes, price, url});
         }
         return products;
     }
@@ -347,9 +345,12 @@ async function sync_cities(opt={}){
     const cities = await get_scrapper(opt.scrapper).get_cities();
     const cities_len = Object.keys(cities).length;
     console.log(`got [${cities_len}] cities`, cities);
-    console.log('saving cities in conf...');
-    await set_conf('cities', cities);
-    console.log('saved cities in conf');
+    if (opt.save)
+    {
+        console.log('saving cities in conf...');
+        await set_conf('cities', cities);
+        console.log('saved cities in conf');
+    }
     console.log('finished sync cities in', get_dur(start));
 }
 
@@ -375,9 +376,12 @@ async function sync_products(opt={}){
     }
     console.log(`got total [${products.length}] products of`,
         `[${types.length}] types`, products, types);
-    console.log('saving products in conf...');
-    await set_conf('products', products);
-    console.log('saved products in conf');
+    if (opt.save)
+    {
+        console.log('saving products in conf...');
+        await set_conf('products', products);
+        console.log('saved products in conf');
+    }
     console.log('finished sync products', get_dur(start));
 }
 
