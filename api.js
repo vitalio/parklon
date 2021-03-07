@@ -1,3 +1,4 @@
+/*jshint esversion: 8*/
 const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
 const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
@@ -49,7 +50,7 @@ const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const get_el_text = el=>el && el.textContent && el.textContent.trim();
 const init_parse_html = html=>{
     const parse_range = document.createRange();
-    return parse = Range.prototype.createContextualFragment.bind(parse_range);
+    return Range.prototype.createContextualFragment.bind(parse_range);
 };
 const parse_html = init_parse_html();
 const if_set = (val, o, name)=>{
@@ -230,7 +231,7 @@ async function get_delivery_routes(city_id, city_name, opt={}){
     return {routes, cost_min, cost_max};
 }
 
-// cities
+// city
 
 async function get_cities(){
     const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
@@ -316,7 +317,7 @@ async function get_products(line){
             if (img && img.src)
                 imgs.push(img.src);
         }
-        const type = sizes.map(s=>s.value).join(',');;
+        const type = sizes.map(s=>s.value).join(',');
         products.push({id, type, line: line.id, category, title, imgs, sizes,
             price, url});
     }
@@ -324,12 +325,21 @@ async function get_products(line){
 }
 
 const get_products_by_type = products=>{
-    const type2products = {};
+    const res = {};
     products.forEach(p=>{
-        type2products[p.type] = type2products[p.type]||[];
-        type2products[p.type].push(p);
+        res[p.type] = res[p.type]||[];
+        res[p.type].push(p);
     });
-    return type2products;
+    return res;
+};
+
+const get_products_by_line = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.line] = res[p.line]||[];
+        res[p.line].push(p);
+    });
+    return res;
 };
 
 // sync
@@ -418,7 +428,8 @@ async function sync_delivery_for_type(type, opt={}){
         if (opt.wait)
             await wait(opt.wait);
     }
-    console.log('finished sync delivery by cities in', get_dur(start));
+    console.log(`finished sync delivery for type [${type}] in`,
+        get_dur(start));
     return {errors};
 }
 
