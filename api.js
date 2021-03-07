@@ -416,11 +416,11 @@ async function sync_delivery_for_type(type, opt={}){
                 console.log('+ sync_delivery_for_type >', data);
             const cost_range = cost_min+'-'+cost_max;
             console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range, '₽',
+                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
                 'OK', get_dur(_start), get_dur(opt.start));
         } catch(e){
             console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range, '₽',
+                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
                 'ERROR', e, get_dur(_start), get_dur(opt.start));
             errors = errors||{};
             errors[id] = e;
