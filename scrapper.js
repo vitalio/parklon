@@ -572,4 +572,5 @@ class Sync {
     }
 }
 
-main();
+if (!module.parent)
+    main();
