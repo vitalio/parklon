@@ -1,5 +1,10 @@
 /*jshint esversion: 8*/
+const DAYS_ADD = 3;
 let conf;
+
+import { hello } from "./test_export";
+
+console.log('import', hello);
 
 async function init(){
     try {
@@ -214,7 +219,7 @@ const get_items = (menu_code, sub_menu_code)=>{
 };
 
 const get_item_data = item=>{
-    const days = (+item.days||0)+3;
+    const days = (+item.days||0)+DAYS_ADD;
     const d = new Date();
     d.setDate(d.getDate()+days);
     const day = d.getDate();

@@ -47,7 +47,6 @@ const RESTDB_RETRY = 3;
 
 const {assign} = Object;
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
-const get_el_text = el=>el && el.textContent && el.textContent.trim();
 const init_parse_html = html=>{
     const parse_range = document.createRange();
     return Range.prototype.createContextualFragment.bind(parse_range);
@@ -95,11 +94,9 @@ async function fetch_json(url, opt){
 
 // restdb
 
-function get_restdb_by_type(type){
-    return restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
-}
+const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
 
-function restdb(name){
+const restdb = name=>{
     if (RESTDB_DEBUG)
         console.log('+ restdb <', name);
     if (!RESTDB_INSTANCES[name])
@@ -108,7 +105,7 @@ function restdb(name){
     if (!this.instances[name])
         this.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
     return this.instances[name];
-}
+};
 
 class RestDB {
     constructor(instance){
@@ -184,145 +181,138 @@ async function get_all_conf(){
     return conf;
 }
 
-// order
+// scrapper
 
-async function get_order_data(city_name){
-    let html = await custom_fetch(PARKLON_ORDER_URL);
-    if (city_name && !html.includes(city_name))
-        throw new Error('');
-    const start_token = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
-    html = html.substr(html.indexOf(start_token)+start_token.length);
-    const end_token = 'JSCustomOrderAjaxArea.init()';
-    html = html.substr(0, html.indexOf(end_token));
-    html = html.trim();
-    html = html.substr(0, html.length-2);
-    return (new Function('return '+html))();
-}
-
-async function get_delivery_routes(city_id, city_name, opt={}){
-    if (opt.verbose)
-        console.log('+ get_delivery_routes <', city_id, city_name, opt);
-    await fetch_json(PARKLON_REGIONS_AJAX_URL, {
-        input: 'form', body: {ACTION: 'CHANGE', ID: ''+city_id}});
-    const res = await get_order_data(city_name);
-    if (opt.verbose)
-        console.log('+ get_delivery_routes >', res);
-    const routes = res.SaleResult.MARSHROUTE;
-    let cost_min, cost_max;
-    for (const id in routes)
-    {
-        routes[id] = routes[id].map(r=>{
-            const route = {};
-            route.cost = +r.cost;
-            if (cost_min===undefined || route.cost<cost_min)
-                cost_min = route.cost;
-            if (cost_max===undefined || route.cost>cost_max)
-                cost_max = route.cost;
-            route.days = +r.days; 
-            if_set(r.name, route, 'name');
-            if_set(r.delivery_code, route, 'code'); 
-            if_set(r.place_id, route, 'place_id');
-            if_set(r.gps, route, 'gps');
-            if_set(r.phone, route, 'phone');
-            if_set(r.address, route, 'address');
-            return route;
+class Scrapper {
+    async get_order_data(city_name){
+        let html = await custom_fetch(PARKLON_ORDER_URL);
+        if (city_name && !html.includes(city_name))
+            throw new Error(`order city mismatch, expect [${city_name}]`);
+        const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
+        html = html.substr(html.indexOf(token_s)+token_s.length);
+        const token_e = 'JSCustomOrderAjaxArea.init()';
+        html = html.substr(0, html.indexOf(token_e));
+        html = html.trim();
+        html = html.substr(0, html.length-2);
+        return (new Function('return '+html))();
+    }
+    async get_routes(city_id, city_name, opt={}){
+        if (opt.verbose)
+            console.log('+ get_routes <', city_id, city_name, opt);
+        await fetch_json(PARKLON_REGIONS_AJAX_URL, {
+            input: 'form', body: {ACTION: 'CHANGE', ID: ''+city_id}});
+        const res = await this.get_order_data(city_name);
+        if (opt.verbose)
+            console.log('+ get_routes >', res);
+        const routes = res.SaleResult.MARSHROUTE;
+        let cost_min, cost_max;
+        for (const id in routes)
+        {
+            routes[id] = routes[id].map(r=>{
+                const route = {};
+                route.cost = +r.cost;
+                if (cost_min===undefined || route.cost<cost_min)
+                    cost_min = route.cost;
+                if (cost_max===undefined || route.cost>cost_max)
+                    cost_max = route.cost;
+                route.days = +r.days;
+                if_set(r.name, route, 'name');
+                if_set(r.delivery_code, route, 'code');
+                if_set(r.place_id, route, 'place_id');
+                if_set(r.gps, route, 'gps');
+                if_set(r.phone, route, 'phone');
+                if_set(r.address, route, 'address');
+                return route;
+            });
+        }
+        return {routes, cost_min, cost_max};
+    }
+    // city
+    async get_cities(){
+        const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
+            {input: 'form', body: {ACTION: 'SEARCH'}});
+        const cities = res && res.searchedresult;
+        for (const id in cities)
+        {
+            if (cities[id]=='Города нет в списке')
+                delete cities[id];
+        }
+        return cities;
+    }
+    // basket
+    async add_to_basket(id){
+        return await fetch_json(PARKLON_ADD_TO_BASKET_URL, {
+            input: 'form', body: {ACTION: 'PUT', id, quantity: 1},
+            headers: {'bx-ajax': 'true'},
         });
     }
-    return {routes, cost_min, cost_max};
-}
-
-// city
-
-async function get_cities(){
-    const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
-        {input: 'form', body: {ACTION: 'SEARCH'}});
-    const cities = res && res.searchedresult;
-    for (const id in cities)
-    {
-        if (cities[id]=='Города нет в списке')
-            delete cities[id];
+    async del_from_basket(id){
+        return await custom_fetch(PARKLON_DEL_FROM_BASKET_URL, {
+            input: 'form', body: {basketAction: 'delete', id},
+            headers: {'bx-ajax': 'true'},
+        });
     }
-    return cities;
-}
-
-// basket
-
-async function add_to_basket(id){
-    return await fetch_json(PARKLON_ADD_TO_BASKET_URL, {
-        input: 'form', body: {ACTION: 'PUT', id, quantity: 1},
-        headers: {'bx-ajax': 'true'},
-    });
-}
-
-async function del_from_basket(id){
-    return await custom_fetch(PARKLON_DEL_FROM_BASKET_URL, {
-        input: 'form', body: {basketAction: 'delete', id},
-        headers: {'bx-ajax': 'true'},
-    });
-}
-
-async function get_basket_id(opt={}){
-    if (opt.verbose)
-        console.log('+ get_basket_id <', opt);
-    const res = await get_order_data();
-    if (opt.verbose)
-        console.log('+ get_basket_id >', res);
-    return Object.keys(res && res.SaleResult && res.SaleResult.GRID
-        && res.SaleResult.GRID.ROWS || {})[0];
-}
-
-// product
-
-async function get_product_lines(){
-    const doc = parse_html(await custom_fetch(PARKLON_CATALOG_URL));
-    const links = doc.querySelectorAll('#drop-lines-menu a');
-    const lines = [];
-    for (let i=1; i<links.length; i++)
-    {
-        const name = links[i].textContent;
-        const id = name.toLowerCase().replace(/ /g, '_');
-        lines.push({id, url: links[i].href, name});
+    async get_basket_id(opt={}){
+        if (opt.verbose)
+            console.log('+ get_basket_id <', opt);
+        const res = await this.get_order_data();
+        if (opt.verbose)
+            console.log('+ get_basket_id >', res);
+        return Object.keys(res && res.SaleResult && res.SaleResult.GRID
+            && res.SaleResult.GRID.ROWS || {})[0];
     }
-    return lines;
-}
-
-async function get_products(line){
-    const doc = parse_html(await custom_fetch(line.url));
-    const products = [];
-    for(const prod of doc.querySelectorAll('.popular-carpets__card')||[])
-    {
-        let id = ''+prod.id;
-        id = id.match(/(.*)_(.*)_(.*)_/);
-        id = id && id[3];
-        const a = prod.querySelector('a');
-        const url = a && a.href;
-        const category = get_el_text(
-            prod.querySelector('.popular-carpets__title'));
-        const title = get_el_text(
-            prod.querySelector('.popular-carpets__sub-title'));
-        const price = get_el_text(
-            prod.querySelector('.popular-carpets__price'));
-        const sizes = [];
-        for (const o of prod.querySelectorAll('.popular-carpets__sizes')||[])
+    // product
+    async get_product_lines(){
+        const doc = parse_html(await custom_fetch(PARKLON_CATALOG_URL));
+        const links = doc.querySelectorAll('#drop-lines-menu a');
+        const lines = [];
+        for (let i=1; i<links.length; i++)
         {
-            const childs = o.children||[];
-            const name = get_el_text(childs[0]);
-            const value = get_el_text(childs[1]);
-            if (name||value)
-                sizes.push({name, value});
+            const name = links[i].textContent;
+            const id = name.toLowerCase().replace(/ /g, '_');
+            lines.push({id, url: links[i].href, name});
         }
-        const imgs = [];
-        for (const img of prod.querySelectorAll('.catalog-item__img img')||[])
-        {
-            if (img && img.src)
-                imgs.push(img.src);
-        }
-        const type = sizes.map(s=>s.value).join(',');
-        products.push({id, type, line: line.id, category, title, imgs, sizes,
-            price, url});
+        return lines;
     }
-    return products;
+    async get_products(line_id, line_url){
+        const doc = parse_html(await custom_fetch(line_url));
+        const products = [];
+        const get_el_text = el=>el && el.textContent && el.textContent.trim();
+        for(const prod of doc.querySelectorAll('.popular-carpets__card')||[])
+        {
+            let id = ''+prod.id;
+            id = id.match(/(.*)_(.*)_(.*)_/);
+            id = id && id[3];
+            const a = prod.querySelector('a');
+            const url = a && a.href;
+            const category = get_el_text(
+                prod.querySelector('.popular-carpets__title'));
+            const title = get_el_text(
+                prod.querySelector('.popular-carpets__sub-title'));
+            const price = get_el_text(
+                prod.querySelector('.popular-carpets__price'));
+            const sizes = [];
+            (prod.querySelectorAll('.popular-carpets__sizes')||[]).forEach(o=>{
+                const childs = o.children||[];
+                const name = get_el_text(childs[0]);
+                const value = get_el_text(childs[1]);
+                if (name||value)
+                    sizes.push({name, value});
+            });
+            const imgs = [];
+            (prod.querySelectorAll('.catalog-item__img img')||[]).forEach(o=>{
+                if (o && o.src)
+                    imgs.push(o.src);
+            });
+            const type = sizes.map(s=>s.value).join(',');
+            products.push({id, type, line: line_id, category, title, imgs,
+                sizes, price, url});
+        }
+        return products;
+    }
 }
+
+// products
 
 const get_products_by_type = products=>{
     const res = {};
@@ -344,30 +334,36 @@ const get_products_by_line = products=>{
 
 // sync
 
-async function sync_cities(){
+const get_scrapper = scrapper=>scrapper || new Scrapper();
+
+async function sync_cities(opt={}){
     const start = Date.now();
     console.log('started sync cities');
     console.log('getting cities...');
-    const cities = await get_cities();
+    const cities = await get_scrapper(opt.scrapper).get_cities();
     const cities_len = Object.keys(cities).length;
     console.log(`got [${cities_len}] cities`, cities);
-    console.log('saving cities in conf...');
-    await set_conf('cities', cities);
-    console.log('saved cities in conf');
+    if (opt.save)
+    {
+        console.log('saving cities in conf...');
+        await set_conf('cities', cities);
+        console.log('saved cities in conf');
+    }
     console.log('finished sync cities in', get_dur(start));
 }
 
-async function sync_products(){
+async function sync_products(opt={}){
     const start = Date.now();
+    const scrapper = get_scrapper(opt.scrapper);
     console.log('started sync products');
     console.log('getting product lines...');
-    const lines = await get_product_lines();
+    const lines = await scrapper.get_product_lines();
     console.log(`got [${lines.length}] product lines`, lines);
     const products = [], types = [];
     for (const line of lines)
     {
         console.log(`getting products for [${line.id}]...`);
-        const _products = await get_products(line);
+        const _products = await scrapper.get_products(line.id, line.url);
         _products.forEach(p=>{
             if (!types.includes(p.type))
                 types.push(p.type);
@@ -378,15 +374,19 @@ async function sync_products(){
     }
     console.log(`got total [${products.length}] products of`,
         `[${types.length}] types`, products, types);
-    console.log('saving products in conf...');
-    await set_conf('products', products);
-    console.log('saved products in conf');
+    if (opt.save)
+    {
+        console.log('saving products in conf...');
+        await set_conf('products', products);
+        console.log('saved products in conf');
+    }
     console.log('finished sync products', get_dur(start));
 }
 
 async function sync_delivery_for_type(type, opt={}){
     if (opt.verbose)
         console.log('+ sync_delivery_for_type <', type, opt);
+    const scrapper = get_scrapper(opt.scrapper);
     const start = Date.now();
     if (!opt.start)
         assign(opt, {start});
@@ -402,7 +402,7 @@ async function sync_delivery_for_type(type, opt={}){
         const name = cities[id];
         const _start = Date.now();
         try {
-            const {routes, cost_min, cost_max} = await get_delivery_routes(id,
+            const {routes, cost_min, cost_max} = await scrapper.get_routes(id,
                 name, opt);
             const data = {id, type, cost_min, cost_max, routes};
             if (opt.save)
@@ -416,11 +416,11 @@ async function sync_delivery_for_type(type, opt={}){
                 console.log('+ sync_delivery_for_type >', data);
             const cost_range = cost_min+'-'+cost_max;
             console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range, '₽',
+                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
                 'OK', get_dur(_start), get_dur(opt.start));
         } catch(e){
             console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range, '₽',
+                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
                 'ERROR', e, get_dur(_start), get_dur(opt.start));
             errors = errors||{};
             errors[id] = e;
@@ -461,7 +461,9 @@ async function sync_delivery(opt={}){
     const cities_len = cities_keys.length;
     if (!cities_len)
         throw new Error('empty cities');
-    assign(opt, {cities, cities_keys, cities_len, types_len: types.length});
+    const scrapper = get_scrapper(opt.scrapper);
+    assign(opt, {cities, cities_keys, cities_len, types_len: types.length,
+        scrapper});
     const errors = {};
     let i = 0;
     for (const type of types)
@@ -470,12 +472,12 @@ async function sync_delivery(opt={}){
         console.log(`process type [${type}] ${i}/${types.length}`);
         const prod = type2products[type][0].id;
         console.log(`adding product [${prod}] to basket...`);
-        const basket_res = await add_to_basket(prod);
+        const basket_res = await scrapper.add_to_basket(prod);
         if (basket_res.result!='success')
             throw new Error(`failed add to basket prod [${prod}]`);
         console.log('product added');
         console.log('getting basket ID...');
-        const basket_id = await get_basket_id(opt);
+        const basket_id = await scrapper.get_basket_id(opt);
         if (!basket_id)
             throw new Error(`failed get basket ID prod [${prod}]`);
         console.log(`got basket ID [${basket_id}]`);
@@ -484,7 +486,7 @@ async function sync_delivery(opt={}){
         if (res.errors)
             errors[id] = res.errors;
         console.log(`deleting from basket [${basket_id}]...`);
-        await del_from_basket(basket_id);
+        await scrapper.del_from_basket(basket_id);
         console.log('basket is empty');
     }
     if (Object.keys(errors).length)
