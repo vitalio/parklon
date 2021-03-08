@@ -94,17 +94,17 @@ async function fetch_json(url, opt){
 
 // restdb
 
-const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
+export const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
 
 const restdb = name=>{
     if (RESTDB_DEBUG)
         console.log('+ restdb <', name);
     if (!RESTDB_INSTANCES[name])
         throw new Error('no restdb instance '+name);
-    this.instances = this.instances||{};
-    if (!this.instances[name])
-        this.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
-    return this.instances[name];
+    restdb.instances = restdb.instances||{};
+    if (!restdb.instances[name])
+        restdb.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
+    return restdb.instances[name];
 };
 
 class RestDB {
@@ -174,7 +174,7 @@ async function set_conf(name, value){
     await restdb('main').update_or_add('conf', {name}, {name, value});
 }
 
-async function get_all_conf(){
+export async function get_all_conf(){
     const res = await restdb('main').get_all('conf');
     const conf = {};
     res.forEach(c=>conf[c.name] = c.value);
@@ -314,7 +314,7 @@ class Scrapper {
 
 // products
 
-const get_products_by_type = products=>{
+export const get_products_by_type = products=>{
     const res = {};
     products.forEach(p=>{
         res[p.type] = res[p.type]||[];
