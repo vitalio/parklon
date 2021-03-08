@@ -5,13 +5,13 @@ const axiosCookieJarSupport = require('axios-cookiejar-support').default;
 const tough = require('tough-cookie');
 const fetch = require('node-fetch');
 const getopts = require('getopts');
+axiosCookieJarSupport(axios);
 
 const {assign} = Object;
 const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
 };
-axiosCookieJarSupport(axios);
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
