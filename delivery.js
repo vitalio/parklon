@@ -2,10 +2,6 @@
 const DAYS_ADD = 3;
 let conf;
 
-import { hello } from "./test_export";
-
-console.log('import', hello);
-
 async function init(){
     try {
         conf = window.CONF || await get_all_conf();
