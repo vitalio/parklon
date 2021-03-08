@@ -47,7 +47,6 @@ const RESTDB_RETRY = 3;
 
 const {assign} = Object;
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
-const get_el_text = el=>el && el.textContent && el.textContent.trim();
 const init_parse_html = html=>{
     const parse_range = document.createRange();
     return Range.prototype.createContextualFragment.bind(parse_range);
@@ -95,11 +94,9 @@ async function fetch_json(url, opt){
 
 // restdb
 
-function get_restdb_by_type(type){
-    return restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
-}
+const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
 
-function restdb(name){
+const restdb = name=>{
     if (RESTDB_DEBUG)
         console.log('+ restdb <', name);
     if (!RESTDB_INSTANCES[name])
@@ -108,7 +105,7 @@ function restdb(name){
     if (!this.instances[name])
         this.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
     return this.instances[name];
-}
+};
 
 class RestDB {
     constructor(instance){
@@ -190,7 +187,7 @@ class Scrapper {
     async get_order_data(city_name){
         let html = await custom_fetch(PARKLON_ORDER_URL);
         if (city_name && !html.includes(city_name))
-            throw new Error('');
+            throw new Error(`order city mismatch, expect [${city_name}]`);
         const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
         html = html.substr(html.indexOf(token_s)+token_s.length);
         const token_e = 'JSCustomOrderAjaxArea.init()';
@@ -277,9 +274,10 @@ class Scrapper {
         }
         return lines;
     }
-    async get_products(line){
-        const doc = parse_html(await custom_fetch(line.url));
+    async get_products(line_id, line_url){
+        const doc = parse_html(await custom_fetch(line_url));
         const products = [];
+        const get_el_text = el=>el && el.textContent && el.textContent.trim();
         for(const prod of doc.querySelectorAll('.popular-carpets__card')||[])
         {
             let id = ''+prod.id;
@@ -307,7 +305,7 @@ class Scrapper {
                     imgs.push(o.src);
             });
             const type = sizes.map(s=>s.value).join(',');
-            products.push({id, type, line: line.id, category, title, imgs,
+            products.push({id, type, line: line_id, category, title, imgs,
                 sizes, price, url});
         }
         return products;
@@ -365,7 +363,7 @@ async function sync_products(opt={}){
     for (const line of lines)
     {
         console.log(`getting products for [${line.id}]...`);
-        const _products = await scrapper.get_products(line);
+        const _products = await scrapper.get_products(line.id, line.url);
         _products.forEach(p=>{
             if (!types.includes(p.type))
                 types.push(p.type);
