@@ -1,5 +1,4 @@
 /*jshint esversion: 8*/
-console.log('api.js v5');
 const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
 const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
