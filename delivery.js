@@ -2,8 +2,6 @@
 import {get_all_conf, get_restdb_by_type,
     get_products_by_type} from "./api.js";
 
-console.log('delivery.js v5');
-
 const DAYS_ADD = 3;
 const {assign} = Object;
 let conf;
