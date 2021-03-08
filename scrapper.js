@@ -12,7 +12,6 @@ const if_set = (val, o, name)=>{
         o[name] = val;
 };
 axiosCookieJarSupport(axios);
-const cookieJar = new tough.CookieJar();
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
@@ -119,7 +118,22 @@ async function main(){
         db = PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1] ? get_restdb_by_type(arg1)
             : restdb(arg1);
         console.log(await db.get_total(arg2));
+        break;
+    case 'get_live_routes':
+        console.log(await get_live_routes(arg1, arg2, opt));
+        break;
     }
+}
+
+async function get_live_routes(type, city_id, opt){
+    const conf = await get_all_conf();
+    const type2products = get_products_by_type(conf.products);
+    const prod = type2products[type][0].id;
+    const scrapper = new Scrapper();
+    await scrapper.add_to_basket(prod);
+    const {routes} = await scrapper.get_routes(city_id, conf.cities[city_id],
+        opt);
+    return routes;
 }
 
 const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
@@ -227,9 +241,12 @@ class RestDB {
 }
 
 class Scrapper {
+    constructor(){
+        this.jar = new tough.CookieJar();
+    }
     async get_order_data(city_name){
         let {data} = await axios.get(PARKLON_ORDER_URL, {
-            jar: cookieJar,
+            jar: this.jar,
             withCredentials: true,
         });
         if (city_name && !data.includes(city_name))
@@ -249,7 +266,7 @@ class Scrapper {
         fd.append('ACTION', 'CHANGE');
         fd.append('ID', city_id);
         await axios.post(PARKLON_REGIONS_AJAX_URL, fd, {
-            jar: cookieJar,
+            jar: this.jar,
             withCredentials: true,
             headers: fd.getHeaders(),
         });
@@ -299,18 +316,19 @@ class Scrapper {
         fd.append('id', id);
         fd.append('quantity', 1);
         const {data} = await axios.post(PARKLON_ADD_TO_BASKET_URL, fd, {
-            jar: cookieJar,
+            jar: this.jar,
             withCredentials: true,
             headers: assign({'bx-ajax': 'true'}, fd.getHeaders()),
         });
-        return data;
+        if (!data || data.result!='success')
+            throw new Error(`failed add to basket prod [${id}]`);
     }
     async del_from_basket(id){
         const fd = new FormData();
         fd.append('basketAction', 'delete');
         fd.append('id', id);
         const {data} = await axios.post(PARKLON_DEL_FROM_BASKET_URL, fd, {
-            jar: cookieJar,
+            jar: this.jar,
             withCredentials: true,
             headers: assign({'bx-ajax': 'true'}, fd.getHeaders()),
         });
@@ -549,9 +567,7 @@ class Sync {
             console.log(`process type [${type}] ${i}/${types_len}`);
             const prod = type2products[type][0].id;
             console.log(`adding product [${prod}] to basket...`);
-            const basket_res = await this.scrapper.add_to_basket(prod);
-            if (basket_res.result!='success')
-                throw new Error(`failed add to basket prod [${prod}]`);
+            await this.scrapper.add_to_basket(prod);
             console.log('product added');
             console.log('getting basket ID...');
             const basket_id = await this.scrapper.get_basket_id(opt);
