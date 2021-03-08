@@ -270,7 +270,7 @@ const copy_result = ()=>{
     input.remove();
     $('#copy').text('Copied');
     console.log('copied');
-    setTimeout(()=>$('#copy').text('Copy'), 250);
+    setTimeout(()=>$('#copy').text('Copy'), 150);
 };
 
 $(document).ready(init);
