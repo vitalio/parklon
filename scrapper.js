@@ -77,6 +77,7 @@ async function main(){
     const [cmd, arg1, arg2] = opt._;
     const scrapper = new Scrapper();
     const sync = new Sync(scrapper);
+    let db;
     switch (cmd)
     {
     case 'sync_delivery':
@@ -114,6 +115,10 @@ async function main(){
     case 'get_all_conf':
         console.log(await get_all_conf());
         break;
+    case 'get_total':
+        db = PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1] ? get_restdb_by_type(arg1)
+            : restdb(arg1);
+        console.log(await db.get_total(arg2));
     }
 }
 
@@ -207,6 +212,10 @@ class RestDB {
     }
     async query(coll, query){
         return await this.req(coll+'?q='+JSON.stringify(query));
+    }
+    async get_total(coll){
+        const res = await this.req(coll+'?&totals=true&count=true');
+        return res.totals.count;
     }
     async update_or_add(coll, query, data){
         const res = await this.query(coll, query);
