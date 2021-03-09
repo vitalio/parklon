@@ -7,7 +7,7 @@ const PARKLON_ADD_TO_BASKET_URL =
 const PARKLON_DEL_FROM_BASKET_URL =
     'https://parklon.ru/local/ajax/del_from_basket.php';
 const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
-const RESTDB_INSTANCES = {
+export const RESTDB_INSTANCES = {
     main: {db: 'parklon-d6c5', api_key: '603fe66aacc40f765fede3a8'},
     db1: {db: 'parklon-f756', api_key: '6043ace5acc40f765fede48c'},
     db2: {db: 'parklon-53e1', api_key: '6043e271acc40f765fede495'},
@@ -24,7 +24,7 @@ const RESTDB_INSTANCES = {
     db13: {db: 'parklon-359c', api_key: '6044ce16acc40f765fede4df'},
     db14: {db: 'parklon-af08', api_key: '6044d5daacc40f765fede4e3'},
 };
-const PRODUCT_TYPE_TO_RESTDB_INSTANCE = {
+export const PRODUCT_TYPE_TO_RESTDB_INSTANCE = {
     '138x138 см,1.2 см,PVC': 'db1',
     '190x130 см,1.2 см,PVC': 'db2',
     '190x130 см,3 см,PVC/PU': 'db3',
@@ -88,7 +88,7 @@ async function custom_fetch(url, opt={}){
     return await res.text();
 }
 
-async function fetch_json(url, opt){
+export async function fetch_json(url, opt){
     return await custom_fetch(url, assign(opt, {output: 'json'}));
 }
 
@@ -96,7 +96,7 @@ async function fetch_json(url, opt){
 
 export const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
 
-const restdb = name=>{
+export const restdb = name=>{
     if (RESTDB_DEBUG)
         console.log('+ restdb <', name);
     if (!RESTDB_INSTANCES[name])
@@ -107,7 +107,7 @@ const restdb = name=>{
     return restdb.instances[name];
 };
 
-class RestDB {
+export class RestDB {
     constructor(instance){
         assign(this, instance);
         this.base_url = `https://${this.db}.restdb.io/rest/`;
@@ -165,12 +165,12 @@ class RestDB {
 
 // conf
 
-async function get_conf(name){
+export async function get_conf(name){
     const res = await restdb('main').query('conf', {name});
     return res && res[0] && res[0].value;
 }
 
-async function set_conf(name, value){
+export async function set_conf(name, value){
     await restdb('main').update_or_add('conf', {name}, {name, value});
 }
 
@@ -183,7 +183,7 @@ export async function get_all_conf(){
 
 // scrapper
 
-class Scrapper {
+export class Scrapper {
     async get_order_data(city_name){
         let html = await custom_fetch(PARKLON_ORDER_URL);
         if (city_name && !html.includes(city_name))
@@ -323,7 +323,7 @@ export const get_products_by_type = products=>{
     return res;
 };
 
-const get_products_by_line = products=>{
+export const get_products_by_line = products=>{
     const res = {};
     products.forEach(p=>{
         res[p.line] = res[p.line]||[];
@@ -334,162 +334,159 @@ const get_products_by_line = products=>{
 
 // sync
 
-const get_scrapper = scrapper=>scrapper || new Scrapper();
-
-async function sync_cities(opt={}){
-    const start = Date.now();
-    console.log('started sync cities');
-    console.log('getting cities...');
-    const cities = await get_scrapper(opt.scrapper).get_cities();
-    const cities_len = Object.keys(cities).length;
-    console.log(`got [${cities_len}] cities`, cities);
-    if (opt.save)
-    {
-        console.log('saving cities in conf...');
-        await set_conf('cities', cities);
-        console.log('saved cities in conf');
+export class Sync {
+    constructor(scrapper){
+        this.scrapper = scrapper;
     }
-    console.log('finished sync cities in', get_dur(start));
-}
-
-async function sync_products(opt={}){
-    const start = Date.now();
-    const scrapper = get_scrapper(opt.scrapper);
-    console.log('started sync products');
-    console.log('getting product lines...');
-    const lines = await scrapper.get_product_lines();
-    console.log(`got [${lines.length}] product lines`, lines);
-    const products = [], types = [];
-    for (const line of lines)
-    {
-        console.log(`getting products for [${line.id}]...`);
-        const _products = await scrapper.get_products(line.id, line.url);
-        _products.forEach(p=>{
-            if (!types.includes(p.type))
-                types.push(p.type);
-        });
-        Array.prototype.push.apply(products, _products);
-        console.log(`got [${_products.length}] products for [${line.id}]`,
-            _products);
-    }
-    console.log(`got total [${products.length}] products of`,
-        `[${types.length}] types`, products, types);
-    if (opt.save)
-    {
-        console.log('saving products in conf...');
-        await set_conf('products', products);
-        console.log('saved products in conf');
-    }
-    console.log('finished sync products', get_dur(start));
-}
-
-async function sync_delivery_for_type(type, opt={}){
-    if (opt.verbose)
-        console.log('+ sync_delivery_for_type <', type, opt);
-    const scrapper = get_scrapper(opt.scrapper);
-    const start = Date.now();
-    if (!opt.start)
-        assign(opt, {start});
-    console.log(`started sync delivery for [${type}]`);
-    const {cities, cities_keys} = opt;
-    let errors;
-    let i = 0;
-    for (const id of cities_keys)
-    {
-        i++;
-        if (opt.skip_cities && i<opt.skip_cities)
-            continue;
-        const name = cities[id];
-        const _start = Date.now();
-        try {
-            const {routes, cost_min, cost_max} = await scrapper.get_routes(id,
-                name, opt);
-            const data = {id, type, cost_min, cost_max, routes};
-            if (opt.save)
-            {
-                await get_restdb_by_type(type).update_or_add('city', {id},
-                    data);
-            }
-            if (!opt.save)
-                console.log(data);
-            else if (opt.verbose)
-                console.log('+ sync_delivery_for_type >', data);
-            const cost_range = cost_min+'-'+cost_max;
-            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
-                'OK', get_dur(_start), get_dur(opt.start));
-        } catch(e){
-            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
-                'ERROR', e, get_dur(_start), get_dur(opt.start));
-            errors = errors||{};
-            errors[id] = e;
+    async sync_cities(opt={}){
+        const start = Date.now();
+        console.log('started sync cities');
+        console.log('getting cities...');
+        const cities = await this.scrapper.get_cities();
+        const cities_len = Object.keys(cities).length;
+        console.log(`got [${cities_len}] cities`, cities);
+        if (opt.save)
+        {
+            console.log('saving cities in conf...');
+            await set_conf('cities', cities);
+            console.log('saved cities in conf');
         }
-        if (opt.wait)
-            await wait(opt.wait);
+        console.log('finished sync cities in', get_dur(start));
     }
-    console.log(`finished sync delivery for type [${type}] in`,
-        get_dur(start));
-    return {errors};
-}
-
-async function sync_delivery(opt={}){
-    const start = Date.now();
-    if (!opt.start)
-        assign(opt, {start});
-    console.log('started sync delivery');
-    const {cities, products} = await get_all_conf();
-    if (!products)
-        throw new Error('no products');
-    if (!cities)
-        throw new Error('no cities');
-    const type2products = get_products_by_type(products);
-    const types = Object.keys(type2products).filter(t=>{
-        return !opt.type || opt.type==t
-            || is_array(opt.type) && opt.type.includes(t);
-    });
-    types.forEach(type=>{
-        if (!PRODUCT_TYPE_TO_RESTDB_INSTANCE[type])
-            throw new Error(`no db instance for [${type}]`);
-    });
-    if (!types.length)
-        throw new Error('empty types');
-    const cities_keys = Object.keys(cities).filter(k=>{
-        return !opt.city || opt.city==k
-            || is_array(opt.city) && opt.city.includes(k);
-    });
-    const cities_len = cities_keys.length;
-    if (!cities_len)
-        throw new Error('empty cities');
-    const scrapper = get_scrapper(opt.scrapper);
-    assign(opt, {cities, cities_keys, cities_len, types_len: types.length,
-        scrapper});
-    const errors = {};
-    let i = 0;
-    for (const type of types)
-    {
-        i++;
-        console.log(`process type [${type}] ${i}/${types.length}`);
-        const prod = type2products[type][0].id;
-        console.log(`adding product [${prod}] to basket...`);
-        const basket_res = await scrapper.add_to_basket(prod);
-        if (basket_res.result!='success')
-            throw new Error(`failed add to basket prod [${prod}]`);
-        console.log('product added');
-        console.log('getting basket ID...');
-        const basket_id = await scrapper.get_basket_id(opt);
-        if (!basket_id)
-            throw new Error(`failed get basket ID prod [${prod}]`);
-        console.log(`got basket ID [${basket_id}]`);
-        const res = await sync_delivery_for_type(type,
-            assign(opt, {type_i: i}));
-        if (res.errors)
-            errors[id] = res.errors;
-        console.log(`deleting from basket [${basket_id}]...`);
-        await scrapper.del_from_basket(basket_id);
-        console.log('basket is empty');
+    async sync_products(opt={}){
+        const start = Date.now();
+        console.log('started sync products');
+        console.log('getting product lines...');
+        const lines = await this.scrapper.get_product_lines();
+        console.log(`got [${lines.length}] product lines`, lines);
+        const products = [], types = [];
+        for (const line of lines)
+        {
+            console.log(`getting products for [${line.id}]...`);
+            const _products = await this.scrapper.get_products(line.id,
+                line.url);
+            _products.forEach(p=>{
+                if (!types.includes(p.type))
+                    types.push(p.type);
+            });
+            Array.prototype.push.apply(products, _products);
+            console.log(`got [${_products.length}] products for [${line.id}]`,
+                _products);
+        }
+        console.log(`got total [${products.length}] products of`,
+            `[${types.length}] types`, products, types);
+        if (opt.save)
+        {
+            console.log('saving products in conf...');
+            await set_conf('products', products);
+            console.log('saved products in conf');
+        }
+        console.log('finished sync products', get_dur(start));
     }
-    if (Object.keys(errors).length)
-        console.log('errors', errors);
-    console.log('finished sync delivery in', get_dur(start));
+    async sync_delivery_for_type(type, opt={}){
+        if (opt.verbose)
+            console.log('+ sync_delivery_for_type <', type, opt);
+        const start = Date.now();
+        if (!opt.start)
+            assign(opt, {start});
+        console.log(`started sync delivery for [${type}]`);
+        const {cities, cities_keys} = opt;
+        let errors;
+        let i = 0;
+        const skip_cities = +opt.skip_cities;
+        for (const id of cities_keys)
+        {
+            i++;
+            if (skip_cities && i<skip_cities)
+                continue;
+            const name = cities[id];
+            const _start = Date.now();
+            try {
+                const {routes, cost_min, cost_max} = await this.scrapper
+                    .get_routes(id, name, opt);
+                const data = {id, type, cost_min, cost_max, routes};
+                if (opt.save)
+                {
+                    await get_restdb_by_type(type).update_or_add('city', {id},
+                        data);
+                }
+                if (!opt.save)
+                    console.log(data);
+                else if (opt.verbose)
+                    console.log('+ sync_delivery_for_type >', data);
+                const cost_range = cost_min+'-'+cost_max;
+                console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                    `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
+                    'OK', get_dur(_start), get_dur(opt.start));
+            } catch(e){
+                console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                    `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
+                    'ERROR', e, get_dur(_start), get_dur(opt.start));
+                errors = errors||{};
+                errors[id] = e;
+            }
+            if (opt.wait)
+                await wait(opt.wait);
+        }
+        console.log(`finished sync delivery for type [${type}] in`,
+            get_dur(start));
+        return {errors};
+    }
+    async sync_delivery(opt={}){
+        const start = Date.now();
+        if (!opt.start)
+            assign(opt, {start});
+        console.log('started sync delivery');
+        const {cities, products} = await get_all_conf();
+        if (!products)
+            throw new Error('no products');
+        if (!cities)
+            throw new Error('no cities');
+        const type2products = get_products_by_type(products);
+        const types = Object.keys(type2products).filter(t=>{
+            return !opt.type || opt.type==t
+                || is_array(opt.type) && opt.type.includes(t);
+        });
+        types.forEach(type=>{
+            if (!PRODUCT_TYPE_TO_RESTDB_INSTANCE[type])
+                throw new Error(`no db instance for [${type}]`);
+        });
+        const types_len = types.length;
+        if (!types_len)
+            throw new Error('empty types');
+        const cities_keys = Object.keys(cities).filter(k=>{
+            return !opt.city || opt.city==k
+                || is_array(opt.city) && opt.city.includes(k);
+        });
+        const cities_len = cities_keys.length;
+        if (!cities_len)
+            throw new Error('empty cities');
+        assign(opt, {cities, cities_keys, cities_len, types_len});
+        const errors = {};
+        let i = 0;
+        for (const type of types)
+        {
+            i++;
+            console.log(`process type [${type}] ${i}/${types_len}`);
+            const prod = type2products[type][0].id;
+            console.log(`adding product [${prod}] to basket...`);
+            await this.scrapper.add_to_basket(prod);
+            console.log('product added');
+            console.log('getting basket ID...');
+            const basket_id = await this.scrapper.get_basket_id(opt);
+            if (!basket_id)
+                throw new Error(`failed get basket ID prod [${prod}]`);
+            console.log(`got basket ID [${basket_id}]`);
+            const res = await this.sync_delivery_for_type(type,
+                assign(opt, {type_i: i}));
+            if (res.errors)
+                errors[id] = res.errors;
+            console.log(`deleting from basket [${basket_id}]...`);
+            await this.scrapper.del_from_basket(basket_id);
+            console.log('basket is empty');
+        }
+        if (Object.keys(errors).length)
+            console.log('errors', errors);
+        console.log('finished sync delivery in', get_dur(start));
+    }
 }
