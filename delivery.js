@@ -1,5 +1,5 @@
 /*jshint esversion: 8*/
-import api from "./api.js";
+import * as api from "./api.js";
 
 const DAYS_ADD = 3;
 const {assign} = Object;
@@ -17,14 +17,8 @@ class RestDBInstance extends api.BaseRestDBInstance {
 }
 
 class Scrapper extends api.BaseScrapper {
-    constructor(fetch_api){
-        this.parse_html = Range.prototype.createContextualFragment.bind(
-            document.createRange())
-        super(fetch_api);
-    }
     parse(data){
         return {$, parsed: $.parseHTML(data)};
-        // this.parse_html(data);
     }
     select(parsed, selector){
         parsed.find(selector);
@@ -63,10 +57,9 @@ async function init(){
         else
             deselect_type();
         $('#loading').hide();
-
-        const scrapper = new Scrapper();
+        /* const scrapper = new Scrapper(custom_fetch);
         const sync = new api.Sync(scrapper, restdb);
-        await sync.sync_delivery();
+        await sync.sync_delivery(); */
     } catch(e){
         set_fatal_error(e);
     }

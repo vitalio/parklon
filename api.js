@@ -193,7 +193,7 @@ export class BaseScrapper {
     async get(url){
         return await this.fetch(url);
     }
-    async post(url, body, headersurl){
+    async post(url, body, headers){
         return await this.get(url, {method: 'POST', input: 'form',
             output: 'json', body, headers});
     }
