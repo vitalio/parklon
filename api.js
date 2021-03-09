@@ -1,12 +1,13 @@
 /*jshint esversion: 8*/
-const PARKLON_REGIONS_AJAX_URL =
+export const PARKLON_BASE_URL = 'https://parklon.ru';
+export const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
-const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
-const PARKLON_ADD_TO_BASKET_URL =
+export const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
+export const PARKLON_ADD_TO_BASKET_URL =
     'https://parklon.ru/local/ajax/add_to_basket.php';
-const PARKLON_DEL_FROM_BASKET_URL =
+export const PARKLON_DEL_FROM_BASKET_URL =
     'https://parklon.ru/local/ajax/del_from_basket.php';
-const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
+export const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
 export const RESTDB_INSTANCES = {
     main: {db: 'parklon-d6c5', api_key: '603fe66aacc40f765fede3a8'},
     db1: {db: 'parklon-f756', api_key: '6043ace5acc40f765fede48c'},
@@ -47,11 +48,6 @@ const RESTDB_RETRY = 3;
 
 const {assign} = Object;
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
-const init_parse_html = html=>{
-    const parse_range = document.createRange();
-    return Range.prototype.createContextualFragment.bind(parse_range);
-};
-const parse_html = init_parse_html();
 const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
@@ -59,9 +55,7 @@ const if_set = (val, o, name)=>{
 const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
 
-// fetch
-
-async function custom_fetch(url, opt={}){
+export const init_fetch = fetch_api=>async (url, opt={})=>{
     const req = {};
     if (opt.method)
         req.method = opt.method;
@@ -82,44 +76,47 @@ async function custom_fetch(url, opt={}){
             body: fd,
         });
     }
-    const res = await fetch(url, req);
+    const res = await fetch_api(url, req);
     if (opt.output=='json')
         return await res.json();
     return await res.text();
-}
-
-export async function fetch_json(url, opt){
-    return await custom_fetch(url, assign(opt, {output: 'json'}));
-}
+};
 
 // restdb
 
-export const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
-
-export const restdb = name=>{
-    if (RESTDB_DEBUG)
-        console.log('+ restdb <', name);
-    if (!RESTDB_INSTANCES[name])
-        throw new Error('no restdb instance '+name);
-    restdb.instances = restdb.instances||{};
-    if (!restdb.instances[name])
-        restdb.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
-    return restdb.instances[name];
-};
-
 export class RestDB {
-    constructor(instance){
-        assign(this, instance);
+    constructor(instance_class){
+        assign(this, {instance_class});
+    }
+    get_instance(name){
+        const instance_conf = RESTDB_INSTANCES[name];
+        if (RESTDB_DEBUG)
+            console.log('+ RestDB.get_instance <', name);
+        if (!instance_conf)
+            throw new Error('no restdb instance '+name);
+        this.instances = this.instances||{};
+        if (!this.instances[name])
+            this.instances[name] = new this.instance_class(instance_conf);
+        return this.instances[name];
+    }
+    get_instance_by_type(type){
+        return this.get_instance(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
+    }
+}
+
+export class BaseRestDBInstance {
+    constructor({db, api_key}){
+        assign(this, {db, api_key});
         this.base_url = `https://${this.db}.restdb.io/rest/`;
     }
     async req(path, method, body, level=0){
         if (RESTDB_DEBUG)
         {
-            console.log(`+ RestDB[${this.db}].req <`, path, method, body,
-                level);
+            console.log(`+ RestDBInstance@${this.db}.req <`, path, method,
+                body, level);
         }
         try {
-            return await fetch_json(this.base_url+path, {
+            return await this.fetch_json(this.base_url+path, {
                 method: method||'GET',
                 headers: {
                     'x-apikey': this.api_key,
@@ -165,42 +162,58 @@ export class RestDB {
 
 // conf
 
-export async function get_conf(name){
-    const res = await restdb('main').query('conf', {name});
-    return res && res[0] && res[0].value;
-}
-
-export async function set_conf(name, value){
-    await restdb('main').update_or_add('conf', {name}, {name, value});
-}
-
-export async function get_all_conf(){
-    const res = await restdb('main').get_all('conf');
-    const conf = {};
-    res.forEach(c=>conf[c.name] = c.value);
-    return conf;
+export class Conf {
+    constructor(restdb){
+        assign(this, {restdb});
+    }
+    async get_conf(name){
+        const res = await this.restdb.get_instance('main').query('conf',
+            {name});
+        return res && res[0] && res[0].value;
+    }
+    async set_conf(name, value){
+        await this.restdb.get_instance('main').update_or_add('conf', {name},
+            {name, value});
+    }
+    async get_all(){
+        const res = await this.restdb.get_instance('main').get_all('conf');
+        const conf = {};
+        res.forEach(c=>conf[c.name] = c.value);
+        return conf;
+    }
 }
 
 // scrapper
 
-export class Scrapper {
+export class BaseScrapper {
+    constructor(fetch_api){
+        if (fetch_api)
+            this.fetch = init_fetch(fetch_api);
+    }
+    async get(url){
+        return await this.fetch(url);
+    }
+    async post(url, body, headersurl){
+        return await this.get(url, {method: 'POST', input: 'form',
+            output: 'json', body, headers});
+    }
     async get_order_data(city_name){
-        let html = await custom_fetch(PARKLON_ORDER_URL);
-        if (city_name && !html.includes(city_name))
+        let data = await this.get(PARKLON_ORDER_URL);
+        if (city_name && !data.includes(city_name))
             throw new Error(`order city mismatch, expect [${city_name}]`);
         const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
-        html = html.substr(html.indexOf(token_s)+token_s.length);
+        data = data.substr(data.indexOf(token_s)+token_s.length);
         const token_e = 'JSCustomOrderAjaxArea.init()';
-        html = html.substr(0, html.indexOf(token_e));
-        html = html.trim();
-        html = html.substr(0, html.length-2);
-        return (new Function('return '+html))();
+        data = data.substr(0, data.indexOf(token_e));
+        data = data.trim();
+        data = data.substr(0, data.length-2);
+        return (new Function('return '+data))();
     }
     async get_routes(city_id, city_name, opt={}){
         if (opt.verbose)
             console.log('+ get_routes <', city_id, city_name, opt);
-        await fetch_json(PARKLON_REGIONS_AJAX_URL, {
-            input: 'form', body: {ACTION: 'CHANGE', ID: ''+city_id}});
+        await this.post(PARKLON_REGIONS_AJAX_URL,
+            {ACTION: 'CHANGE', ID: ''+city_id});
         const res = await this.get_order_data(city_name);
         if (opt.verbose)
             console.log('+ get_routes >', res);
@@ -228,9 +241,13 @@ export class Scrapper {
         return {routes, cost_min, cost_max};
     }
     // city
-    async get_cities(){
-        const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
+    async fetch_cities(){
+        return await fetch_json(PARKLON_REGIONS_AJAX_URL,
             {input: 'form', body: {ACTION: 'SEARCH'}});
+    }
+    async get_cities(){
+        const res = await this.post(PARKLON_REGIONS_AJAX_URL,
+            {ACTION: 'SEARCH'});
         const cities = res && res.searchedresult;
         for (const id in cities)
         {
@@ -241,16 +258,14 @@ export class Scrapper {
     }
     // basket
     async add_to_basket(id){
-        return await fetch_json(PARKLON_ADD_TO_BASKET_URL, {
-            input: 'form', body: {ACTION: 'PUT', id, quantity: 1},
-            headers: {'bx-ajax': 'true'},
-        });
+        const data = await this.post(PARKLON_ADD_TO_BASKET_URL,
+            {ACTION: 'PUT', id, quantity: 1}, {'bx-ajax': 'true'});
+        if (!data || data.result!='success')
+            throw new Error(`failed add to basket prod [${id}]`);
     }
     async del_from_basket(id){
-        return await custom_fetch(PARKLON_DEL_FROM_BASKET_URL, {
-            input: 'form', body: {basketAction: 'delete', id},
-            headers: {'bx-ajax': 'true'},
-        });
+        return await this.post(PARKLON_DEL_FROM_BASKET_URL,
+            {basketAction: 'delete', id}, {'bx-ajax': 'true'});
     }
     async get_basket_id(opt={}){
         if (opt.verbose)
@@ -263,51 +278,53 @@ export class Scrapper {
     }
     // product
     async get_product_lines(){
-        const doc = parse_html(await custom_fetch(PARKLON_CATALOG_URL));
-        const links = doc.querySelectorAll('#drop-lines-menu a');
+        const data = await this.get(PARKLON_CATALOG_URL);
+        const {$, parsed} = this.parse(data);
         const lines = [];
-        for (let i=1; i<links.length; i++)
-        {
-            const name = links[i].textContent;
+        this.select(parsed, '#drop-lines-menu a').each(function(i){
+            if (!i)
+                return;
+            const el = $(this);
+            const name = el.text();
             const id = name.toLowerCase().replace(/ /g, '_');
-            lines.push({id, url: links[i].href, name});
-        }
+            lines.push({id, url: PARKLON_BASE_URL+el.attr('href'), name});
+        })
         return lines;
     }
     async get_products(line_id, line_url){
-        const doc = parse_html(await custom_fetch(line_url));
+        const data = await this.get(line_url);
+        const {$, parsed} = this.parse(data);
         const products = [];
-        const get_el_text = el=>el && el.textContent && el.textContent.trim();
-        for(const prod of doc.querySelectorAll('.popular-carpets__card')||[])
-        {
-            let id = ''+prod.id;
+        const get_el_text = el=>el && $(el).text().trim();
+        this.select(parsed, '.popular-carpets__card').each(function(){
+            const el = $(this);
+            let id = ''+el.attr('id');
             id = id.match(/(.*)_(.*)_(.*)_/);
             id = id && id[3];
-            const a = prod.querySelector('a');
-            const url = a && a.href;
-            const category = get_el_text(
-                prod.querySelector('.popular-carpets__title'));
-            const title = get_el_text(
-                prod.querySelector('.popular-carpets__sub-title'));
-            const price = get_el_text(
-                prod.querySelector('.popular-carpets__price'));
+            const a = el.find('a');
+            const url = a && PARKLON_BASE_URL+a.attr('href');
+            const category = get_el_text(el.find('.popular-carpets__title'));
+            const title = get_el_text(el.find('.popular-carpets__sub-title'));
+            const price = get_el_text(el.find('.popular-carpets__price'));
             const sizes = [];
-            (prod.querySelectorAll('.popular-carpets__sizes')||[]).forEach(o=>{
-                const childs = o.children||[];
-                const name = get_el_text(childs[0]);
-                const value = get_el_text(childs[1]);
+            el.find('.popular-carpets__sizes').each(function(){
+                const childs = $(this).find('p');
+                const name = get_el_text(childs.get(0));
+                const value = get_el_text(childs.get(1));
                 if (name||value)
                     sizes.push({name, value});
             });
             const imgs = [];
-            (prod.querySelectorAll('.catalog-item__img img')||[]).forEach(o=>{
-                if (o && o.src)
-                    imgs.push(o.src);
+            el.find('.catalog-item__img img').each(function(){
+                const o = $(this);
+                const src = $(this).attr('src');
+                if (src)
+                    imgs.push(PARKLON_BASE_URL+src);
             });
             const type = sizes.map(s=>s.value).join(',');
             products.push({id, type, line: line_id, category, title, imgs,
                 sizes, price, url});
-        }
+        });
         return products;
     }
 }
@@ -335,8 +352,9 @@ export const get_products_by_line = products=>{
 // sync
 
 export class Sync {
-    constructor(scrapper){
-        this.scrapper = scrapper;
+    constructor(scrapper, restdb){
+        assign(this, {scrapper, restdb});
+        this.conf = new Conf(restdb);
     }
     async sync_cities(opt={}){
         const start = Date.now();
@@ -348,7 +366,7 @@ export class Sync {
         if (opt.save)
         {
             console.log('saving cities in conf...');
-            await set_conf('cities', cities);
+            await this.conf.set('cities', cities);
             console.log('saved cities in conf');
         }
         console.log('finished sync cities in', get_dur(start));
@@ -378,7 +396,7 @@ export class Sync {
         if (opt.save)
         {
             console.log('saving products in conf...');
-            await set_conf('products', products);
+            await this.conf.set('products', products);
             console.log('saved products in conf');
         }
         console.log('finished sync products', get_dur(start));
@@ -407,8 +425,8 @@ export class Sync {
                 const data = {id, type, cost_min, cost_max, routes};
                 if (opt.save)
                 {
-                    await get_restdb_by_type(type).update_or_add('city', {id},
-                        data);
+                    await this.restdb.get_instance_by_type(type)
+                        .update_or_add('city', {id}, data);
                 }
                 if (!opt.save)
                     console.log(data);
@@ -437,7 +455,7 @@ export class Sync {
         if (!opt.start)
             assign(opt, {start});
         console.log('started sync delivery');
-        const {cities, products} = await get_all_conf();
+        const {cities, products} = await this.conf.get_all();
         if (!products)
             throw new Error('no products');
         if (!cities)
