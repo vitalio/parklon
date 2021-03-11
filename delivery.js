@@ -121,12 +121,6 @@ async function on_screen(){
         canvas.toBlob(blob=>active_blob = blob);
         $('#screen').removeClass('process');
         $('#screen').addClass('waiting');
-        //canvas.toBlob(blob=>saveAs(blob, 'parklon_delivery.png'));
-        /*const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
-            'image/octet-stream');
-        a.download = 'screen.jpg';
-        a.click();*/
     } catch(e){
         $('#screen').removeClass('process');
         console.error('failed to copy result screen', e);
