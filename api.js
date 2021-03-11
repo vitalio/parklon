@@ -1,13 +1,14 @@
 /*jshint esversion: 8*/
-const PARKLON_REGIONS_AJAX_URL =
+export const PARKLON_BASE_URL = 'https://parklon.ru';
+export const PARKLON_REGIONS_AJAX_URL =
     'https://parklon.ru/local/components/dial/regions/ajax.php';
-const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
-const PARKLON_ADD_TO_BASKET_URL =
+export const PARKLON_ORDER_URL = 'https://parklon.ru/personal/order/make/';
+export const PARKLON_ADD_TO_BASKET_URL =
     'https://parklon.ru/local/ajax/add_to_basket.php';
-const PARKLON_DEL_FROM_BASKET_URL =
+export const PARKLON_DEL_FROM_BASKET_URL =
     'https://parklon.ru/local/ajax/del_from_basket.php';
-const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
-const RESTDB_INSTANCES = {
+export const PARKLON_CATALOG_URL = 'https://parklon.ru/catalog/';
+export const RESTDB_INSTANCES = {
     main: {db: 'parklon-d6c5', api_key: '603fe66aacc40f765fede3a8'},
     db1: {db: 'parklon-f756', api_key: '6043ace5acc40f765fede48c'},
     db2: {db: 'parklon-53e1', api_key: '6043e271acc40f765fede495'},
@@ -24,7 +25,7 @@ const RESTDB_INSTANCES = {
     db13: {db: 'parklon-359c', api_key: '6044ce16acc40f765fede4df'},
     db14: {db: 'parklon-af08', api_key: '6044d5daacc40f765fede4e3'},
 };
-const PRODUCT_TYPE_TO_RESTDB_INSTANCE = {
+export const PRODUCT_TYPE_TO_RESTDB_INSTANCE = {
     '138x138 см,1.2 см,PVC': 'db1',
     '190x130 см,1.2 см,PVC': 'db2',
     '190x130 см,3 см,PVC/PU': 'db3',
@@ -47,11 +48,6 @@ const RESTDB_RETRY = 3;
 
 const {assign} = Object;
 const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
-const init_parse_html = html=>{
-    const parse_range = document.createRange();
-    return Range.prototype.createContextualFragment.bind(parse_range);
-};
-const parse_html = init_parse_html();
 const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
@@ -59,9 +55,7 @@ const if_set = (val, o, name)=>{
 const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
 
-// fetch
-
-async function custom_fetch(url, opt={}){
+export const init_fetch = fetch_api=>async (url, opt={})=>{
     const req = {};
     if (opt.method)
         req.method = opt.method;
@@ -82,44 +76,67 @@ async function custom_fetch(url, opt={}){
             body: fd,
         });
     }
-    const res = await fetch(url, req);
+    const res = await fetch_api(url, req);
     if (opt.output=='json')
         return await res.json();
     return await res.text();
-}
+};
 
-async function fetch_json(url, opt){
-    return await custom_fetch(url, assign(opt, {output: 'json'}));
-}
+// products
+
+export const get_products_by_type = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.type] = res[p.type]||[];
+        res[p.type].push(p);
+    });
+    return res;
+};
+
+export const get_products_by_line = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.line] = res[p.line]||[];
+        res[p.line].push(p);
+    });
+    return res;
+};
 
 // restdb
 
-export const get_restdb_by_type = type=>restdb(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
+export class RestDB {
+    constructor(instance_class){
+        assign(this, {instance_class});
+    }
+    get_instance(name){
+        const instance_conf = RESTDB_INSTANCES[name];
+        if (RESTDB_DEBUG)
+            console.log('+ RestDB.get_instance <', name);
+        if (!instance_conf)
+            throw new Error('no restdb instance '+name);
+        this.instances = this.instances||{};
+        if (!this.instances[name])
+            this.instances[name] = new this.instance_class(instance_conf);
+        return this.instances[name];
+    }
+    get_instance_by_type(type){
+        return this.get_instance(PRODUCT_TYPE_TO_RESTDB_INSTANCE[type]);
+    }
+}
 
-const restdb = name=>{
-    if (RESTDB_DEBUG)
-        console.log('+ restdb <', name);
-    if (!RESTDB_INSTANCES[name])
-        throw new Error('no restdb instance '+name);
-    restdb.instances = restdb.instances||{};
-    if (!restdb.instances[name])
-        restdb.instances[name] = new RestDB(RESTDB_INSTANCES[name]);
-    return restdb.instances[name];
-};
-
-class RestDB {
-    constructor(instance){
-        assign(this, instance);
+export class BaseRestDBInstance {
+    constructor({db, api_key}){
+        assign(this, {db, api_key});
         this.base_url = `https://${this.db}.restdb.io/rest/`;
     }
     async req(path, method, body, level=0){
         if (RESTDB_DEBUG)
         {
-            console.log(`+ RestDB[${this.db}].req <`, path, method, body,
-                level);
+            console.log(`+ RestDBInstance@${this.db}.req <`, path, method,
+                body, level);
         }
         try {
-            return await fetch_json(this.base_url+path, {
+            return await this.fetch_json(this.base_url+path, {
                 method: method||'GET',
                 headers: {
                     'x-apikey': this.api_key,
@@ -161,46 +178,72 @@ class RestDB {
         else
             await this.add(coll, data);
     }
+    async get_total(coll){
+        const res = await this.req(coll+'?&totals=true&count=true');
+        return res.totals.count;
+    }
 }
 
 // conf
 
-async function get_conf(name){
-    const res = await restdb('main').query('conf', {name});
-    return res && res[0] && res[0].value;
-}
-
-async function set_conf(name, value){
-    await restdb('main').update_or_add('conf', {name}, {name, value});
-}
-
-export async function get_all_conf(){
-    const res = await restdb('main').get_all('conf');
-    const conf = {};
-    res.forEach(c=>conf[c.name] = c.value);
-    return conf;
+export class Conf {
+    constructor(restdb){
+        assign(this, {restdb});
+    }
+    async get_conf(name){
+        const res = await this.restdb.get_instance('main').query('conf',
+            {name});
+        return res && res[0] && res[0].value;
+    }
+    async set_conf(name, value){
+        await this.restdb.get_instance('main').update_or_add('conf', {name},
+            {name, value});
+    }
+    async get_all(){
+        const res = await this.restdb.get_instance('main').get_all('conf');
+        const conf = {};
+        res.forEach(c=>conf[c.name] = c.value);
+        return conf;
+    }
 }
 
 // scrapper
 
-class Scrapper {
+export class BaseScrapper {
+    constructor(fetch_api){
+        if (fetch_api)
+            this.fetch = init_fetch(fetch_api);
+    }
+    async get(url){
+        return await this.fetch(url);
+    }
+    async post(url, body, headers){
+        return await this.get(url, {method: 'POST', input: 'form',
+            output: 'json', body, headers});
+    }
+    parse(data){
+        throw new Error('You have to implement method parse');
+    }
+    select(parsed, selector){
+        throw new Error('You have to implement method select');
+    }
     async get_order_data(city_name){
-        let html = await custom_fetch(PARKLON_ORDER_URL);
-        if (city_name && !html.includes(city_name))
+        let data = await this.get(PARKLON_ORDER_URL);
+        if (city_name && !data.includes(city_name))
             throw new Error(`order city mismatch, expect [${city_name}]`);
         const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
-        html = html.substr(html.indexOf(token_s)+token_s.length);
+        data = data.substr(data.indexOf(token_s)+token_s.length);
         const token_e = 'JSCustomOrderAjaxArea.init()';
-        html = html.substr(0, html.indexOf(token_e));
-        html = html.trim();
-        html = html.substr(0, html.length-2);
-        return (new Function('return '+html))();
+        data = data.substr(0, data.indexOf(token_e));
+        data = data.trim();
+        data = data.substr(0, data.length-2);
+        return (new Function('return '+data))();
     }
     async get_routes(city_id, city_name, opt={}){
         if (opt.verbose)
             console.log('+ get_routes <', city_id, city_name, opt);
-        await fetch_json(PARKLON_REGIONS_AJAX_URL, {
-            input: 'form', body: {ACTION: 'CHANGE', ID: ''+city_id}});
+        await this.post(PARKLON_REGIONS_AJAX_URL,
+            {ACTION: 'CHANGE', ID: ''+city_id});
         const res = await this.get_order_data(city_name);
         if (opt.verbose)
             console.log('+ get_routes >', res);
@@ -228,9 +271,13 @@ class Scrapper {
         return {routes, cost_min, cost_max};
     }
     // city
-    async get_cities(){
-        const res = await fetch_json(PARKLON_REGIONS_AJAX_URL,
+    async fetch_cities(){
+        return await fetch_json(PARKLON_REGIONS_AJAX_URL,
             {input: 'form', body: {ACTION: 'SEARCH'}});
+    }
+    async get_cities(){
+        const res = await this.post(PARKLON_REGIONS_AJAX_URL,
+            {ACTION: 'SEARCH'});
         const cities = res && res.searchedresult;
         for (const id in cities)
         {
@@ -240,17 +287,15 @@ class Scrapper {
         return cities;
     }
     // basket
-    async add_to_basket(id){
-        return await fetch_json(PARKLON_ADD_TO_BASKET_URL, {
-            input: 'form', body: {ACTION: 'PUT', id, quantity: 1},
-            headers: {'bx-ajax': 'true'},
-        });
+    async add_to_basket(prod_id){
+        const data = await this.post(PARKLON_ADD_TO_BASKET_URL,
+            {ACTION: 'PUT', id: prod_id, quantity: 1}, {'bx-ajax': 'true'});
+        if (!data || data.result!='success')
+            throw new Error(`failed add to basket prod [${prod_id}]`);
     }
-    async del_from_basket(id){
-        return await custom_fetch(PARKLON_DEL_FROM_BASKET_URL, {
-            input: 'form', body: {basketAction: 'delete', id},
-            headers: {'bx-ajax': 'true'},
-        });
+    async del_from_basket(basket_id){
+        return await this.post(PARKLON_DEL_FROM_BASKET_URL,
+            {basketAction: 'delete', id: basket_id}, {'bx-ajax': 'true'});
     }
     async get_basket_id(opt={}){
         if (opt.verbose)
@@ -263,233 +308,213 @@ class Scrapper {
     }
     // product
     async get_product_lines(){
-        const doc = parse_html(await custom_fetch(PARKLON_CATALOG_URL));
-        const links = doc.querySelectorAll('#drop-lines-menu a');
+        const data = await this.get(PARKLON_CATALOG_URL);
+        const {$, parsed} = this.parse(data);
         const lines = [];
-        for (let i=1; i<links.length; i++)
-        {
-            const name = links[i].textContent;
+        this.select(parsed, '#drop-lines-menu a').each(function(i){
+            if (!i)
+                return;
+            const el = $(this);
+            const name = el.text();
             const id = name.toLowerCase().replace(/ /g, '_');
-            lines.push({id, url: links[i].href, name});
-        }
+            lines.push({id, url: PARKLON_BASE_URL+el.attr('href'), name});
+        })
         return lines;
     }
     async get_products(line_id, line_url){
-        const doc = parse_html(await custom_fetch(line_url));
+        const data = await this.get(line_url);
+        const {$, parsed} = this.parse(data);
         const products = [];
-        const get_el_text = el=>el && el.textContent && el.textContent.trim();
-        for(const prod of doc.querySelectorAll('.popular-carpets__card')||[])
-        {
-            let id = ''+prod.id;
+        const get_el_text = el=>el && $(el).text().trim();
+        this.select(parsed, '.popular-carpets__card').each(function(){
+            const el = $(this);
+            let id = ''+el.attr('id');
             id = id.match(/(.*)_(.*)_(.*)_/);
             id = id && id[3];
-            const a = prod.querySelector('a');
-            const url = a && a.href;
-            const category = get_el_text(
-                prod.querySelector('.popular-carpets__title'));
-            const title = get_el_text(
-                prod.querySelector('.popular-carpets__sub-title'));
-            const price = get_el_text(
-                prod.querySelector('.popular-carpets__price'));
+            const a = el.find('a');
+            const url = a && PARKLON_BASE_URL+a.attr('href');
+            const category = get_el_text(el.find('.popular-carpets__title'));
+            const title = get_el_text(el.find('.popular-carpets__sub-title'));
+            const price = get_el_text(el.find('.popular-carpets__price'));
             const sizes = [];
-            (prod.querySelectorAll('.popular-carpets__sizes')||[]).forEach(o=>{
-                const childs = o.children||[];
-                const name = get_el_text(childs[0]);
-                const value = get_el_text(childs[1]);
+            el.find('.popular-carpets__sizes').each(function(){
+                const childs = $(this).find('p');
+                const name = get_el_text(childs.get(0));
+                const value = get_el_text(childs.get(1));
                 if (name||value)
                     sizes.push({name, value});
             });
             const imgs = [];
-            (prod.querySelectorAll('.catalog-item__img img')||[]).forEach(o=>{
-                if (o && o.src)
-                    imgs.push(o.src);
+            el.find('.catalog-item__img img').each(function(){
+                const o = $(this);
+                const src = $(this).attr('src');
+                if (src)
+                    imgs.push(PARKLON_BASE_URL+src);
             });
             const type = sizes.map(s=>s.value).join(',');
             products.push({id, type, line: line_id, category, title, imgs,
                 sizes, price, url});
-        }
+        });
         return products;
     }
 }
 
-// products
-
-export const get_products_by_type = products=>{
-    const res = {};
-    products.forEach(p=>{
-        res[p.type] = res[p.type]||[];
-        res[p.type].push(p);
-    });
-    return res;
-};
-
-const get_products_by_line = products=>{
-    const res = {};
-    products.forEach(p=>{
-        res[p.line] = res[p.line]||[];
-        res[p.line].push(p);
-    });
-    return res;
-};
-
 // sync
 
-const get_scrapper = scrapper=>scrapper || new Scrapper();
-
-async function sync_cities(opt={}){
-    const start = Date.now();
-    console.log('started sync cities');
-    console.log('getting cities...');
-    const cities = await get_scrapper(opt.scrapper).get_cities();
-    const cities_len = Object.keys(cities).length;
-    console.log(`got [${cities_len}] cities`, cities);
-    if (opt.save)
-    {
-        console.log('saving cities in conf...');
-        await set_conf('cities', cities);
-        console.log('saved cities in conf');
+export class Sync {
+    constructor(scrapper, restdb){
+        assign(this, {scrapper, restdb});
+        this.conf = new Conf(restdb);
     }
-    console.log('finished sync cities in', get_dur(start));
-}
-
-async function sync_products(opt={}){
-    const start = Date.now();
-    const scrapper = get_scrapper(opt.scrapper);
-    console.log('started sync products');
-    console.log('getting product lines...');
-    const lines = await scrapper.get_product_lines();
-    console.log(`got [${lines.length}] product lines`, lines);
-    const products = [], types = [];
-    for (const line of lines)
-    {
-        console.log(`getting products for [${line.id}]...`);
-        const _products = await scrapper.get_products(line.id, line.url);
-        _products.forEach(p=>{
-            if (!types.includes(p.type))
-                types.push(p.type);
-        });
-        Array.prototype.push.apply(products, _products);
-        console.log(`got [${_products.length}] products for [${line.id}]`,
-            _products);
-    }
-    console.log(`got total [${products.length}] products of`,
-        `[${types.length}] types`, products, types);
-    if (opt.save)
-    {
-        console.log('saving products in conf...');
-        await set_conf('products', products);
-        console.log('saved products in conf');
-    }
-    console.log('finished sync products', get_dur(start));
-}
-
-async function sync_delivery_for_type(type, opt={}){
-    if (opt.verbose)
-        console.log('+ sync_delivery_for_type <', type, opt);
-    const scrapper = get_scrapper(opt.scrapper);
-    const start = Date.now();
-    if (!opt.start)
-        assign(opt, {start});
-    console.log(`started sync delivery for [${type}]`);
-    const {cities, cities_keys} = opt;
-    let errors;
-    let i = 0;
-    for (const id of cities_keys)
-    {
-        i++;
-        if (opt.skip_cities && i<opt.skip_cities)
-            continue;
-        const name = cities[id];
-        const _start = Date.now();
-        try {
-            const {routes, cost_min, cost_max} = await scrapper.get_routes(id,
-                name, opt);
-            const data = {id, type, cost_min, cost_max, routes};
-            if (opt.save)
-            {
-                await get_restdb_by_type(type).update_or_add('city', {id},
-                    data);
-            }
-            if (!opt.save)
-                console.log(data);
-            else if (opt.verbose)
-                console.log('+ sync_delivery_for_type >', data);
-            const cost_range = cost_min+'-'+cost_max;
-            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
-                'OK', get_dur(_start), get_dur(opt.start));
-        } catch(e){
-            console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
-                `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
-                'ERROR', e, get_dur(_start), get_dur(opt.start));
-            errors = errors||{};
-            errors[id] = e;
+    async sync_cities(opt={}){
+        const start = Date.now();
+        console.log('started sync cities');
+        console.log('getting cities...');
+        const cities = await this.scrapper.get_cities();
+        const cities_len = Object.keys(cities).length;
+        console.log(`got [${cities_len}] cities`, cities);
+        if (opt.save)
+        {
+            console.log('saving cities in conf...');
+            await this.conf.set('cities', cities);
+            console.log('saved cities in conf');
         }
-        if (opt.wait)
-            await wait(opt.wait);
+        console.log('finished sync cities in', get_dur(start));
     }
-    console.log(`finished sync delivery for type [${type}] in`,
-        get_dur(start));
-    return {errors};
-}
-
-async function sync_delivery(opt={}){
-    const start = Date.now();
-    if (!opt.start)
-        assign(opt, {start});
-    console.log('started sync delivery');
-    const {cities, products} = await get_all_conf();
-    if (!products)
-        throw new Error('no products');
-    if (!cities)
-        throw new Error('no cities');
-    const type2products = get_products_by_type(products);
-    const types = Object.keys(type2products).filter(t=>{
-        return !opt.type || opt.type==t
-            || is_array(opt.type) && opt.type.includes(t);
-    });
-    types.forEach(type=>{
-        if (!PRODUCT_TYPE_TO_RESTDB_INSTANCE[type])
-            throw new Error(`no db instance for [${type}]`);
-    });
-    if (!types.length)
-        throw new Error('empty types');
-    const cities_keys = Object.keys(cities).filter(k=>{
-        return !opt.city || opt.city==k
-            || is_array(opt.city) && opt.city.includes(k);
-    });
-    const cities_len = cities_keys.length;
-    if (!cities_len)
-        throw new Error('empty cities');
-    const scrapper = get_scrapper(opt.scrapper);
-    assign(opt, {cities, cities_keys, cities_len, types_len: types.length,
-        scrapper});
-    const errors = {};
-    let i = 0;
-    for (const type of types)
-    {
-        i++;
-        console.log(`process type [${type}] ${i}/${types.length}`);
-        const prod = type2products[type][0].id;
-        console.log(`adding product [${prod}] to basket...`);
-        const basket_res = await scrapper.add_to_basket(prod);
-        if (basket_res.result!='success')
-            throw new Error(`failed add to basket prod [${prod}]`);
-        console.log('product added');
-        console.log('getting basket ID...');
-        const basket_id = await scrapper.get_basket_id(opt);
-        if (!basket_id)
-            throw new Error(`failed get basket ID prod [${prod}]`);
-        console.log(`got basket ID [${basket_id}]`);
-        const res = await sync_delivery_for_type(type,
-            assign(opt, {type_i: i}));
-        if (res.errors)
-            errors[id] = res.errors;
-        console.log(`deleting from basket [${basket_id}]...`);
-        await scrapper.del_from_basket(basket_id);
-        console.log('basket is empty');
+    async sync_products(opt={}){
+        const start = Date.now();
+        console.log('started sync products');
+        console.log('getting product lines...');
+        const lines = await this.scrapper.get_product_lines();
+        console.log(`got [${lines.length}] product lines`, lines);
+        const products = [], types = [];
+        for (const line of lines)
+        {
+            console.log(`getting products for [${line.id}]...`);
+            const _products = await this.scrapper.get_products(line.id,
+                line.url);
+            _products.forEach(p=>{
+                if (!types.includes(p.type))
+                    types.push(p.type);
+            });
+            Array.prototype.push.apply(products, _products);
+            console.log(`got [${_products.length}] products for [${line.id}]`,
+                _products);
+        }
+        console.log(`got total [${products.length}] products of`,
+            `[${types.length}] types`, products, types);
+        if (opt.save)
+        {
+            console.log('saving products in conf...');
+            await this.conf.set('products', products);
+            console.log('saved products in conf');
+        }
+        console.log('finished sync products', get_dur(start));
     }
-    if (Object.keys(errors).length)
-        console.log('errors', errors);
-    console.log('finished sync delivery in', get_dur(start));
+    async sync_delivery_for_type(type, opt={}){
+        if (opt.verbose)
+            console.log('+ sync_delivery_for_type <', type, opt);
+        const start = Date.now();
+        if (!opt.start)
+            assign(opt, {start});
+        console.log(`started sync delivery for [${type}]`);
+        const {cities, cities_keys} = opt;
+        let errors;
+        let i = 0;
+        const skip_cities = +opt.skip_cities;
+        for (const id of cities_keys)
+        {
+            i++;
+            if (skip_cities && i<skip_cities)
+                continue;
+            const name = cities[id];
+            const _start = Date.now();
+            try {
+                const {routes, cost_min, cost_max} = await this.scrapper
+                    .get_routes(id, name, opt);
+                const data = {id, type, cost_min, cost_max, routes};
+                if (opt.save)
+                {
+                    await this.restdb.get_instance_by_type(type)
+                        .update_or_add('city', {id}, data);
+                }
+                if (!opt.save)
+                    console.log(data);
+                else if (opt.verbose)
+                    console.log('+ sync_delivery_for_type >', data);
+                const cost_range = cost_min+'-'+cost_max;
+                console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                    `${i}/${opt.cities_len}`,`[${id}]`, name, cost_range+'₽',
+                    'OK', get_dur(_start), get_dur(opt.start));
+            } catch(e){
+                console.log(`${opt.type_i}/${opt.types_len}`, `[${type}]`,
+                    `${i}/${opt.cities_len}`, `[${id}]`, name, cost_range+'₽',
+                    'ERROR', e, get_dur(_start), get_dur(opt.start));
+                errors = errors||{};
+                errors[id] = e;
+            }
+            if (opt.wait)
+                await wait(opt.wait);
+        }
+        console.log(`finished sync delivery for type [${type}] in`,
+            get_dur(start));
+        return {errors};
+    }
+    async sync_delivery(opt={}){
+        const start = Date.now();
+        if (!opt.start)
+            assign(opt, {start});
+        console.log('started sync delivery');
+        const {cities, products} = await this.conf.get_all();
+        if (!products)
+            throw new Error('no products');
+        if (!cities)
+            throw new Error('no cities');
+        const type2products = get_products_by_type(products);
+        const types = Object.keys(type2products).filter(t=>{
+            return !opt.type || opt.type==t
+                || is_array(opt.type) && opt.type.includes(t);
+        });
+        types.forEach(type=>{
+            if (!PRODUCT_TYPE_TO_RESTDB_INSTANCE[type])
+                throw new Error(`no db instance for [${type}]`);
+        });
+        const types_len = types.length;
+        if (!types_len)
+            throw new Error('empty types');
+        const cities_keys = Object.keys(cities).filter(k=>{
+            return !opt.city || opt.city==k
+                || is_array(opt.city) && opt.city.includes(k);
+        });
+        const cities_len = cities_keys.length;
+        if (!cities_len)
+            throw new Error('empty cities');
+        assign(opt, {cities, cities_keys, cities_len, types_len});
+        const errors = {};
+        let i = 0;
+        for (const type of types)
+        {
+            i++;
+            console.log(`process type [${type}] ${i}/${types_len}`);
+            const prod = type2products[type][0].id;
+            console.log(`adding product [${prod}] to basket...`);
+            await this.scrapper.add_to_basket(prod);
+            console.log('product added');
+            console.log('getting basket ID...');
+            const basket_id = await this.scrapper.get_basket_id(opt);
+            if (!basket_id)
+                throw new Error(`failed get basket ID prod [${prod}]`);
+            console.log(`got basket ID [${basket_id}]`);
+            const res = await this.sync_delivery_for_type(type,
+                assign(opt, {type_i: i}));
+            if (res.errors)
+                errors[id] = res.errors;
+            console.log(`deleting from basket [${basket_id}]...`);
+            await this.scrapper.del_from_basket(basket_id);
+            console.log('basket is empty');
+        }
+        if (Object.keys(errors).length)
+            console.log('errors', errors);
+        console.log('finished sync delivery in', get_dur(start));
+    }
 }

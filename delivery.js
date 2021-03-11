@@ -1,15 +1,37 @@
 /*jshint esversion: 8*/
-import {get_all_conf, get_restdb_by_type,
-    get_products_by_type} from "./api.js";
+import * as api from "./api.js";
 
 const DAYS_ADD = 3;
 const {assign} = Object;
 let conf;
 
+const custom_fetch = api.init_fetch(fetch);
+
+const fetch_json = async (url, opt)=>await custom_fetch(url,
+    assign(opt, {output: 'json'}));
+
+class RestDBInstance extends api.BaseRestDBInstance {
+    async fetch_json(url, opt){
+        return await fetch_json(url, opt);
+    }
+}
+
+class Scrapper extends api.BaseScrapper {
+    parse(data){
+        return {$, parsed: $.parseHTML(data)};
+    }
+    select(parsed, selector){
+        parsed.find(selector);
+    }
+}
+
+const restdb = new api.RestDB(RestDBInstance);
+
 async function init(){
     try {
-        conf = window.CONF || await get_all_conf();
-        conf.type2products = get_products_by_type(conf.products);
+        const config = new api.Conf(restdb);
+        conf = window.CONF || await config.get_all();
+        conf.type2products = api.get_products_by_type(conf.products);
         console.log('conf', conf);
         const cities_datasrc = [];
         for (const id in conf.cities)
@@ -35,6 +57,9 @@ async function init(){
         else
             deselect_type();
         $('#loading').hide();
+        /* const scrapper = new Scrapper(custom_fetch);
+        const sync = new api.Sync(scrapper, restdb);
+        await sync.sync_delivery(); */
     } catch(e){
         set_fatal_error(e);
     }
@@ -253,7 +278,8 @@ const render_result_text = (menu_code, sub_menu_code)=>{
 };
 
 async function load_data(id){
-    const res = await get_restdb_by_type(active_type).query('city', {id});
+    const res = await restdb.get_instance_by_type(active_type).query('city',
+        {id});
     return res && res[0];
 }
 
