@@ -3,6 +3,7 @@ require = require('esm')(module);
 const api = require('./api.js');
 const api_node = require('./api_node.js');
 const express = require('express');
+const cors = require('cors');
 const PORT = process.env.PORT||80;
 
 let conf, type2products;
@@ -12,6 +13,7 @@ async function init(){
     conf = await config.get_all();
     type2products = api.get_products_by_type(conf.products);
     const app = express();
+    app.use(cors());
     app.get('/live_routes', get_live_routes);
     app.listen(PORT, ()=>console.log(`Listening on ${PORT}`));
 }
@@ -28,5 +30,3 @@ async function get_live_routes(req, res){
 }
 
 init();
-
-
