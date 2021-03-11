@@ -52,34 +52,39 @@ const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
 };
-const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
+export const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
 
-export const init_fetch = fetch_api=>async (url, opt={})=>{
-    const req = {};
-    if (opt.method)
-        req.method = opt.method;
-    if (opt.headers)
-        req.headers = opt.headers;
-     if (opt.body)
-        req.body = opt.body;
-    if (opt.input=='form')
-    {
-        const fd = new FormData();
+export const get_fetch = fetch_api=>{
+    const custom_fetch = async (url, opt={})=>{
+        const req = {};
+        if (opt.method)
+            req.method = opt.method;
+        if (opt.headers)
+            req.headers = opt.headers;
         if (opt.body)
+            req.body = opt.body;
+        if (opt.input=='form')
         {
-            for (const k in opt.body)
-                fd.append(k, opt.body[k]);
+            const fd = new FormData();
+            if (opt.body)
+            {
+                for (const k in opt.body)
+                    fd.append(k, opt.body[k]);
+            }
+            assign(req, {
+                method: 'POST',
+                body: fd,
+            });
         }
-        assign(req, {
-            method: 'POST',
-            body: fd,
-        });
-    }
-    const res = await fetch_api(url, req);
-    if (opt.output=='json')
-        return await res.json();
-    return await res.text();
+        const res = await fetch_api(url, req);
+        if (opt.output=='json')
+            return await res.json();
+        return await res.text();
+    };
+    const fetch_json = async (url, opt={})=>await custom_fetch(url,
+        assign(opt, {output: 'json'}));
+    return {custom_fetch, fetch_json};
 };
 
 // products
@@ -190,12 +195,12 @@ export class Conf {
     constructor(restdb){
         assign(this, {restdb});
     }
-    async get_conf(name){
+    async get(name){
         const res = await this.restdb.get_instance('main').query('conf',
             {name});
         return res && res[0] && res[0].value;
     }
-    async set_conf(name, value){
+    async set(name, value){
         await this.restdb.get_instance('main').update_or_add('conf', {name},
             {name, value});
     }
@@ -321,7 +326,7 @@ export class BaseScrapper {
         })
         return lines;
     }
-    async get_products(line_id, line_url){
+    async get_line_products(line_id, line_url){
         const data = await this.get(line_url);
         const {$, parsed} = this.parse(data);
         const products = [];
@@ -355,6 +360,16 @@ export class BaseScrapper {
             products.push({id, type, line: line_id, category, title, imgs,
                 sizes, price, url});
         });
+        return products;
+    }
+    async get_products(){
+        const lines = await this.get_product_lines();
+        const products = [];
+        for (const line of lines)
+        {
+            Array.prototype.push.apply(products,
+                await this.get_line_products(line.id, line.url));
+        }
         return products;
     }
 }
@@ -391,7 +406,7 @@ export class Sync {
         for (const line of lines)
         {
             console.log(`getting products for [${line.id}]...`);
-            const _products = await this.scrapper.get_products(line.id,
+            const _products = await this.scrapper.get_line_products(line.id,
                 line.url);
             _products.forEach(p=>{
                 if (!types.includes(p.type))
