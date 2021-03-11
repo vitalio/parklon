@@ -84,6 +84,8 @@ async function init(){
         else
             deselect_type();
         $('#loading').hide();
+        $('#copy .copy, #screen .copied').toggle();
+        $('#screen .copy, #screen .copied').toggle();
         /* const scrapper = new Scrapper(custom_fetch);
         const sync = new api.Sync(scrapper, restdb);
         await sync.sync_delivery(); */

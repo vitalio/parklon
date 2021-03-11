@@ -4,4 +4,3 @@ main { display: none; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
 a { cursor: pointer; }
-#copy .copied, #screen .copied { display: none; }
