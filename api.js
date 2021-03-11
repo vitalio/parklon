@@ -47,7 +47,7 @@ const RESTDB_RETRY = 3;
 // util
 
 const {assign} = Object;
-const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
+export const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
@@ -79,8 +79,8 @@ export const get_fetch = fetch_api=>{
         }
         const res = await fetch_api(url, req);
         if (opt.output=='json')
-            return await res.json();
-        return await res.text();
+            return res.json();
+        return res.text();
     };
     const fetch_json = async (url, opt={})=>await custom_fetch(url,
         assign(opt, {output: 'json'}));
@@ -141,7 +141,7 @@ export class BaseRestDBInstance {
                 body, level);
         }
         try {
-            return await this.fetch_json(this.base_url+path, {
+            return this.fetch_json(this.base_url+path, {
                 method: method||'GET',
                 headers: {
                     'x-apikey': this.api_key,
@@ -155,26 +155,26 @@ export class BaseRestDBInstance {
                 throw e;
             console.error(e);
             console.log(`retry ${level+1}/${RESTDB_RETRY}`);
-            return await this.req(path, method, body, level+1);
+            return this.req(path, method, body, level+1);
         }
     }
     async update(coll, id, data){
-        return await this.req(coll+'/'+id, 'PUT', JSON.stringify(data));
+        return this.req(coll+'/'+id, 'PUT', JSON.stringify(data));
     }
     async add(coll, data){
-        return await this.req(coll, 'POST', JSON.stringify(data));
+        return this.req(coll, 'POST', JSON.stringify(data));
     }
     async delete(coll, id){
-        return await this.req(coll+'/'+id, 'DELETE');
+        return this.req(coll+'/'+id, 'DELETE');
     }
     async get_all(coll){
-        return await this.req(coll);
+        return this.req(coll);
     }
     async get_one(coll, id){
-        return await this.req(coll+'/'+id);
+        return this.req(coll+'/'+id);
     }
     async query(coll, query){
-        return await this.req(coll+'?q='+JSON.stringify(query));
+        return this.req(coll+'?q='+JSON.stringify(query));
     }
     async update_or_add(coll, query, data){
         const res = await this.query(coll, query);
@@ -220,11 +220,11 @@ export class BaseScrapper {
             this.fetch = init_fetch(fetch_api);
     }
     async get(url){
-        return await this.fetch(url);
+        return this.fetch(url);
     }
     async post(url, body, headers){
-        return await this.get(url, {method: 'POST', input: 'form',
-            output: 'json', body, headers});
+        return this.get(url, {method: 'POST', input: 'form', output: 'json',
+            body, headers});
     }
     parse(data){
         throw new Error('You have to implement method parse');
@@ -277,7 +277,7 @@ export class BaseScrapper {
     }
     // city
     async fetch_cities(){
-        return await fetch_json(PARKLON_REGIONS_AJAX_URL,
+        return fetch_json(PARKLON_REGIONS_AJAX_URL,
             {input: 'form', body: {ACTION: 'SEARCH'}});
     }
     async get_cities(){
@@ -299,7 +299,7 @@ export class BaseScrapper {
             throw new Error(`failed add to basket prod [${prod_id}]`);
     }
     async del_from_basket(basket_id){
-        return await this.post(PARKLON_DEL_FROM_BASKET_URL,
+        return this.post(PARKLON_DEL_FROM_BASKET_URL,
             {basketAction: 'delete', id: basket_id}, {'bx-ajax': 'true'});
     }
     async get_basket_id(opt={}){

@@ -4,3 +4,8 @@ main { display: none; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
 a { cursor: pointer; }
+button.waiting {
+    background-color: #212529!important;
+    color: #fff!important;
+}
+button.process { background-color: #ffc107!important; }

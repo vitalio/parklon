@@ -26,7 +26,12 @@ async function init(){
     const app = express();
     app.use(cors());
     app.get('/live_routes', get_live_routes);
+    app.get('/ping', ping);
     app.listen(PORT, ()=>console.log(`Listening on ${PORT}`));
+}
+
+async function ping(req, res){
+    res.send('ok');
 }
 
 async function get_live_routes(req, res){
