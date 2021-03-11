@@ -4,17 +4,24 @@ import * as api from "./api.js";
 const DAYS_ADD = 3;
 const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
 const USE_LIVE_ROUTES = true;
+const USE_LOCAL_CONF = true;
 const {assign} = Object;
-let conf;
+let conf = {};
 
 const {custom_fetch, fetch_json} = api.get_fetch(fetch);
 
+const init_from_qs = (name, def)=>qs.get(name) ? +qs.get(name) : def;
+
 const qs = new URLSearchParams(window.location.search);
 
-const use_live_routes = qs.get('live_routes') ? +qs.get('live_routes')
-    : USE_LIVE_ROUTES;
+const use_local_conf = init_from_qs('use_local_conf', USE_LOCAL_CONF);
+const use_live_routes = init_from_qs('use_live_routes', USE_LIVE_ROUTES);
 
-console.log(`use live routes = [${!!use_live_routes}]`);
+if (use_local_conf)
+    console.log('use local conf');
+
+if (use_live_routes)
+    console.log('use live routes');
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
@@ -35,8 +42,21 @@ const restdb = new api.RestDB(RestDBInstance);
 
 async function init(){
     try {
-        const config = new api.Conf(restdb);
-        conf = window.CONF || await config.get_all();
+        if (window.CONF)
+            conf = window.CONF;
+        else
+        {
+            if (use_local_conf)
+            {
+                conf.cities = await fetch_json('./cities.json');
+                conf.products = await fetch_json('./products.json');
+            }
+            else
+            {
+                const config = new api.Conf(restdb);
+                conf = await config.get_all();
+            }
+        }
         conf.type2products = api.get_products_by_type(conf.products);
         console.log('conf', conf);
         const cities_datasrc = [];
