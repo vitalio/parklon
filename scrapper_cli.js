@@ -90,9 +90,8 @@ async function main(){
         break;
     case 'get_total':
         {
-            const db = api.PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1]
-                ? restdb.get_instance_by_type(arg1)
-                : restdb.get_instance(arg1);
+            const db = api.PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1] ?
+                restdb.get_instance_by_type(arg1) : restdb.get_instance(arg1);
             console.log(await db.get_total(arg2||'city'));
             break;
         }
@@ -113,5 +112,5 @@ async function main(){
     }
 }
 
-if (!module.parent)
+if (require.main==module)
     main();
