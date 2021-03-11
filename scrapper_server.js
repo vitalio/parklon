@@ -11,13 +11,13 @@ const PORT = process.env.PORT||80;
 let conf, type2products;
 
 async function init(){
-    if (process.env.use_config)
+    if (+process.env.USE_LOCAL_CONF)
+        conf = {cities, products};
+    else
     {
         const {config} = api_node.init();
         conf = await config.get_all();
     }
-    else
-        conf = {cities, products};
     type2products = api.get_products_by_type(conf.products);
     const app = express();
     app.use(cors());
