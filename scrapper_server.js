@@ -12,11 +12,15 @@ let conf, type2products;
 
 async function init(){
     if (+process.env.USE_LOCAL_CONF)
+    {
         conf = {cities, products};
+        console.log('use local conf');
+    }
     else
     {
         const {config} = api_node.init();
         conf = await config.get_all();
+        console.log('use remote conf');
     }
     type2products = api.get_products_by_type(conf.products);
     const app = express();
