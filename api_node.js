@@ -10,9 +10,7 @@ const api = require('./api.js');
 axiosCookieJarSupport(axios);
 const E = exports;
 
-const custom_fetch = api.init_fetch(fetch);
-const fetch_json = async (url, opt)=>await custom_fetch(url,
-    Object.assign(opt, {output: 'json'}));
+const {fetch_json} = api.get_fetch(fetch);
 
 class Scrapper extends api.BaseScrapper {
     constructor(){
