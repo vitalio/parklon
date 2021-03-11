@@ -77,6 +77,7 @@ async function init(){
         });
         $('main').delegate('#copy', 'click', copy_result);
         $('main').delegate('#clear', 'click', deselect_city);
+        $('main').delegate('#screen', 'click', take_screenshot);
         $('main').show();
         if (active_type)
             select_type(active_type);
@@ -90,6 +91,16 @@ async function init(){
         set_fatal_error(e);
     }
 }
+
+const take_screenshot = ()=>{
+    html2canvas(document.querySelector('#result')).then(canvas => {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
+            'image/octet-stream');
+        a.download = 'screen.jpg';
+        a.click();
+    });
+};
 
 const set_fatal_error = e=>{
     console.error(e);
@@ -142,11 +153,12 @@ let active_type = '200x140 см,1 см,PE';
 let menu, sub_menu, active_menu_code, active_sub_menu_code;
 let active_city, city_items;
 
-const deselect_city = ()=>{
+const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
-    $('#city').val('');
-    empty_result();
+    if (!do_not_remove_city_val)
+        $('#city').val('');
+    clear_result();
     city_items = [];
     active_city = null;
 };
@@ -160,7 +172,7 @@ async function select_city({label, value}){
     console.log('selected city', label, value);
     if (!value)
         return;
-    deselect_city();
+    deselect_city(true);
     set_result('Loading...');
     try {
         const data = window.ROUTES ? {routes: window.ROUTES}
@@ -335,7 +347,7 @@ async function load_data(id){
 
 const set_result = html=>$('#result').html(html);
 
-const empty_result = ()=>$('#result').empty();
+const clear_result = ()=>$('#result').empty();
 
 const copy_result = ()=>{
     const input = document.createElement('textarea');
