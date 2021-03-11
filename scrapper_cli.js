@@ -32,6 +32,9 @@ Commands:
   get_live_routes       type city_id
 `;
 
+const stringify = o=>JSON.stringify(o, null, 4);
+const print_json = o=>console.log(stringify(o));
+
 async function main(){
     const opt = getopts(process.argv.slice(2), {
         alias: {
@@ -60,15 +63,14 @@ async function main(){
         break;
     case 'get_routes':
         {
-            const res = await scrapper.get_routes(arg1, arg2, opt);
-            console.log(JSON.stringify(res, null, 2));
+            print_json(await scrapper.get_routes(arg1, arg2, opt));
             break;
         }
     case 'get_cities':
-        console.log(await scrapper.get_cities());
+        print_json(await scrapper.get_cities());
         break;
     case 'add_to_basket':
-        console.log(await scrapper.add_to_basket(arg1));
+        print_json(await scrapper.add_to_basket(arg1));
         break;
     case 'get_basket_id':
         console.log(await scrapper.get_basket_id(opt));
@@ -77,16 +79,16 @@ async function main(){
         console.log(await scrapper.del_from_basket(arg1));
         break;
     case 'get_product_lines':
-        console.log(await scrapper.get_product_lines());
+        print_json(await scrapper.get_product_lines());
         break;
     case 'get_products':
-        console.log(await scrapper.get_products(arg1, arg2));
+        print_json(await scrapper.get_products(arg1, arg2));
         break;
     case 'get_conf':
-        console.log(await config.get(arg1));
+        print_json(await config.get(arg1));
         break;
     case 'get_all_conf':
-        console.log(await config.get_all());
+        print_json(await config.get_all());
         break;
     case 'get_total':
         {
@@ -104,7 +106,7 @@ async function main(){
             await scrapper.add_to_basket(prod);
             const res = await scrapper.get_routes(city, conf.cities[city],
                 opt);
-            console.log(JSON.stringify(res, null, 2));
+            print_json(res);
             break;
         }
     default:

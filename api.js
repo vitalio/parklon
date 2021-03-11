@@ -195,12 +195,12 @@ export class Conf {
     constructor(restdb){
         assign(this, {restdb});
     }
-    async get_conf(name){
+    async get(name){
         const res = await this.restdb.get_instance('main').query('conf',
             {name});
         return res && res[0] && res[0].value;
     }
-    async set_conf(name, value){
+    async set(name, value){
         await this.restdb.get_instance('main').update_or_add('conf', {name},
             {name, value});
     }
