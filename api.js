@@ -178,6 +178,10 @@ export class BaseRestDBInstance {
         else
             await this.add(coll, data);
     }
+    async get_total(coll){
+        const res = await this.req(coll+'?&totals=true&count=true');
+        return res.totals.count;
+    }
 }
 
 // conf
@@ -283,15 +287,15 @@ export class BaseScrapper {
         return cities;
     }
     // basket
-    async add_to_basket(id){
+    async add_to_basket(prod_id){
         const data = await this.post(PARKLON_ADD_TO_BASKET_URL,
-            {ACTION: 'PUT', id, quantity: 1}, {'bx-ajax': 'true'});
+            {ACTION: 'PUT', id: prod_id, quantity: 1}, {'bx-ajax': 'true'});
         if (!data || data.result!='success')
-            throw new Error(`failed add to basket prod [${id}]`);
+            throw new Error(`failed add to basket prod [${prod_id}]`);
     }
-    async del_from_basket(id){
+    async del_from_basket(basket_id){
         return await this.post(PARKLON_DEL_FROM_BASKET_URL,
-            {basketAction: 'delete', id}, {'bx-ajax': 'true'});
+            {basketAction: 'delete', id: basket_id}, {'bx-ajax': 'true'});
     }
     async get_basket_id(opt={}){
         if (opt.verbose)
