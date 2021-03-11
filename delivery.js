@@ -23,6 +23,10 @@ if (use_local_conf)
 if (use_live_routes)
     console.log('use live routes');
 
+let active_type = '200x140 см,1 см,PE';
+let menu, sub_menu, active_menu_code, active_sub_menu_code;
+let active_blob, active_city, city_items = [];
+
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
         return await fetch_json(url, opt);
@@ -75,17 +79,15 @@ async function init(){
             const sub_menu_code = el.data('sub-menu');
             select_menu(menu_code, sub_menu_code);
         });
-        $('main').delegate('#copy', 'click', copy_result);
-        $('main').delegate('#clear', 'click', ()=>deselect_city());
-        $('main').delegate('#screen', 'click', take_screenshot);
+        $('main').delegate('#copy', 'click', on_copy);
+        $('main').delegate('#clear', 'click', on_clear);
+        $('main').delegate('#screen', 'click', on_screen);
         $('main').show();
         if (active_type)
             select_type(active_type);
         else
             deselect_type();
         $('#loading').hide();
-        $('#copy .copy, #screen .copied').toggle();
-        $('#screen .copy, #screen .copied').toggle();
         /* const scrapper = new Scrapper(custom_fetch);
         const sync = new api.Sync(scrapper, restdb);
         await sync.sync_delivery(); */
@@ -94,31 +96,40 @@ async function init(){
     }
 }
 
-const take_screenshot = ()=>{
+async function on_screen(){
     if (!city_items.length)
         return;
-    $('#screen .copy, #screen .copied').toggle();
+    if (active_blob)
+    {
+        $('#screen').removeClass('waiting');
+        $('#screen').addClass('process');
+        try {
+            const copy_item = new ClipboardItem({'image/png': active_blob});
+            await navigator.clipboard.write([copy_item]);
+            console.log('screenshot copied');
+            await api.wait(150);
+            $('#screen').removeClass('process');
+        } catch(e){
+            $('#screen').removeClass('process');
+            console.error('failed to copy result screen', e);
+        }
+        return;
+    }
+    $('#screen').addClass('waiting');
     try {
-        html2canvas(document.querySelector('#result')).then(canvas=>{
-            canvas.toBlob(async blob=>{
-                await navigator.clipboard
-                    .write([new ClipboardItem({'image/png': blob})]);
-                console.log('screenshot copied');
-                await api.wait(150);
-                $('#screen .copy, #screen .copied').toggle();
-            });
-            //canvas.toBlob(blob=>saveAs(blob, 'parklon_delivery.png'));
-            /*const a = document.createElement('a');
-            a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
-                'image/octet-stream');
-            a.download = 'screen.jpg';
-            a.click();*/
-        });
+        const canvas = await html2canvas(document.querySelector('#result'));
+        canvas.toBlob(blob=>active_blob = blob);
+        //canvas.toBlob(blob=>saveAs(blob, 'parklon_delivery.png'));
+        /*const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
+            'image/octet-stream');
+        a.download = 'screen.jpg';
+        a.click();*/
     } catch(e){
-        $('#screen .copy, #screen .copied').toggle();
+        $('#screen').removeClass('waiting');
         console.error('failed to copy result screen', e);
     }
-};
+}
 
 const set_fatal_error = e=>{
     console.error(e);
@@ -167,18 +178,25 @@ const select_type = type=>{
     active_type = type;
 };
 
-let active_type = '200x140 см,1 см,PE';
-let menu, sub_menu, active_menu_code, active_sub_menu_code;
-let active_city, city_items = [];
+async function on_clear(){
+    if (!active_city)
+        return;
+    $('#clear').addClass('process');
+    deselect_city();
+    await api.wait(250);
+    $('#clear').removeClass('process');
+}
 
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
+    $('#screen').removeClass('waiting process');
     if (!do_not_remove_city_val)
         $('#city').val('');
     clear_result();
     city_items = [];
     active_city = null;
+    active_blob = null;
 };
 
 async function select_city({label, value}){
@@ -364,18 +382,18 @@ const set_result = html=>$('#result').html(html);
 
 const clear_result = ()=>$('#result').empty();
 
-async function copy_result(){
+async function on_copy(){
     if (!city_items.length)
         return;
-    $('#copy .copy, #copy .copied').toggle();
+    $('#copy').addClass('process');
     try {
         const text = render_result_text(active_menu_code, active_sub_menu_code);
         await navigator.clipboard.writeText(text);
         console.log('text copied'); 
         await api.wait(250);
-        $('#copy .copy, #copy .copied').toggle();
+        $('#copy').removeClass('process');
     } catch(e){
-        $('#copy .copy, #copy .copied').toggle();
+        $('#copy').removeClass('process');
         console.error('failed to copy result', e);
     }
 }
