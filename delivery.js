@@ -2,13 +2,19 @@
 import * as api from "./api.js";
 
 const DAYS_ADD = 3;
+const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
+const USE_LIVE_ROUTES = true;
 const {assign} = Object;
 let conf;
 
-const custom_fetch = api.init_fetch(fetch);
+const {custom_fetch, fetch_json} = api.get_fetch(fetch);
 
-const fetch_json = async (url, opt)=>await custom_fetch(url,
-    assign(opt, {output: 'json'}));
+const qs = new URLSearchParams(window.location.search);
+
+const use_live_routes = qs.get('live_routes') ? +qs.get('live_routes')
+    : USE_LIVE_ROUTES;
+
+console.log(`use live routes = [${!!use_live_routes}]`);
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
@@ -113,7 +119,8 @@ const select_type = type=>{
 };
 
 let active_type = '200x140 см,1 см,PE';
-let menu, sub_menu, active_menu_code, active_sub_menu_code, city_items;
+let menu, sub_menu, active_menu_code, active_sub_menu_code;
+let active_city, city_items;
 
 const deselect_city = ()=>{
     $('#menu').empty();
@@ -121,27 +128,31 @@ const deselect_city = ()=>{
     $('#city').val('');
     empty_result();
     city_items = [];
+    active_city = null;
 };
 
 async function select_city({label, value}){
+    if (active_city==value)
+        return;
     city_items = [];
     menu = {all: {label: 'Все', code: 'all', count: 0}};
     sub_menu = {};
     console.log('selected city', label, value);
     if (!value)
         return;
+    deselect_city();
     set_result('Loading...');
     try {
         const data = window.ROUTES ? {routes: window.ROUTES}
             : (await load_data(value));
         if (!data)
             throw new Error(`no data for city id ${value}`);
-        const {routes} = data;
+        const {routes, live} = data;
         if (routes.COURIER && routes.COURIER.length)
         {
             menu.courier = {label: 'Курьер', code: 'courier', count: 0};
             routes.COURIER.forEach(item=>{
-                city_items.push(assign(item, {menu: 'courier'}));
+                city_items.push(assign(item, {menu: 'courier', live}));
                 menu.all.count++;
                 menu.courier.count++;
             });
@@ -166,7 +177,11 @@ async function select_city({label, value}){
         }
         render_menu();
         select_menu('all');
-    } catch(e){ set_result(e); }
+        active_city = value;
+    } catch(e){
+        set_result(e);
+        console.error(e);
+    }
 }
 
 const render_menu = ()=>{
@@ -244,7 +259,7 @@ const get_items = (menu_code, sub_menu_code)=>{
 };
 
 const get_item_data = item=>{
-    const days = (+item.days||0)+DAYS_ADD;
+    const days = (+item.days||0)+(item.live ? 0 : DAYS_ADD);
     const d = new Date();
     d.setDate(d.getDate()+days);
     const day = d.getDate();
@@ -278,8 +293,23 @@ const render_result_text = (menu_code, sub_menu_code)=>{
 };
 
 async function load_data(id){
+    const start = Date.now();
+    if (use_live_routes)
+    {
+        try {
+            const res = await fetch_json(LIVE_ROUTES_URL+'?type='+active_type
+                +'&city_id='+id);
+            if (res)
+            {
+                console.log('loaded data using live routes in',
+                    api.get_dur(start));
+                return assign(res, {live: true});
+            }
+        } catch(e){ console.error('failed to get live routes', e); }
+    }
     const res = await restdb.get_instance_by_type(active_type).query('city',
         {id});
+    console.log('loaded data using restdb in', api.get_dur(start));
     return res && res[0];
 }
 
