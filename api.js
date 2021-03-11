@@ -47,7 +47,7 @@ const RESTDB_RETRY = 3;
 // util
 
 const {assign} = Object;
-const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
+export const wait = ms=>new Promise(resolve=>setTimeout(resolve, ms));
 const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
