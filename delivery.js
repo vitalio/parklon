@@ -197,7 +197,6 @@ const deselect_city = do_not_remove_city_val=>{
     clear_result();
     city_items = [];
     active_city = null;
-    
 };
 
 async function select_city({label, value}){
@@ -389,9 +388,10 @@ async function on_copy(){
         return;
     $('#copy').addClass('process');
     try {
-        const text = render_result_text(active_menu_code, active_sub_menu_code);
+        const text = render_result_text(active_menu_code,
+            active_sub_menu_code);
         await navigator.clipboard.writeText(text);
-        console.log('text copied'); 
+        console.log('text copied');
         await api.wait(250);
         $('#copy').removeClass('process');
     } catch(e){
