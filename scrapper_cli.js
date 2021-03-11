@@ -2,7 +2,7 @@
 require = require('esm')(module);
 const getopts = require('getopts');
 const api = require('./api.js');
-const api_node = require('./api_node.js');
+const {restdb, config, scrapper, sync} = require('./api_node.js').init();
 
 const help = `Usage: node scrapper.js [options] [command] [params]
 
@@ -48,7 +48,6 @@ async function main(){
     if (opt.help)
         return void console.log(help);
     const [cmd, arg1, arg2] = opt._;
-    const {restdb, config, scrapper, sync} = api_node;
     switch (cmd)
     {
     case 'sync_delivery':

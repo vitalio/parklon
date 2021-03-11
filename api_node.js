@@ -46,15 +46,16 @@ class Scrapper extends api.BaseScrapper {
     }
 }
 
-const restdb = new api.RestDB(class extends api.BaseRestDBInstance {
-    async fetch_json(url, opt){
-        return await fetch_json(url, opt);
-    }
-});
-const config = new api.Conf(restdb);
+const init = ()=>{
+    const restdb = new api.RestDB(class extends api.BaseRestDBInstance {
+        async fetch_json(url, opt){
+            return await fetch_json(url, opt);
+        }
+    });
+    const config = new api.Conf(restdb);
+    const scrapper = new Scrapper();
+    const sync = new api.Sync(scrapper, restdb);
+    return {restdb, config, scrapper, sync};
+};
 
-const scrapper = new Scrapper();
-
-const sync = new api.Sync(scrapper, restdb);
-
-module.exports = {restdb, config, scrapper, sync};
+module.exports = {Scrapper, init};
