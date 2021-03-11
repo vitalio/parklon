@@ -82,6 +82,26 @@ export const init_fetch = fetch_api=>async (url, opt={})=>{
     return await res.text();
 };
 
+// products
+
+export const get_products_by_type = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.type] = res[p.type]||[];
+        res[p.type].push(p);
+    });
+    return res;
+};
+
+export const get_products_by_line = products=>{
+    const res = {};
+    products.forEach(p=>{
+        res[p.line] = res[p.line]||[];
+        res[p.line].push(p);
+    });
+    return res;
+};
+
 // restdb
 
 export class RestDB {
@@ -328,26 +348,6 @@ export class BaseScrapper {
         return products;
     }
 }
-
-// products
-
-export const get_products_by_type = products=>{
-    const res = {};
-    products.forEach(p=>{
-        res[p.type] = res[p.type]||[];
-        res[p.type].push(p);
-    });
-    return res;
-};
-
-export const get_products_by_line = products=>{
-    const res = {};
-    products.forEach(p=>{
-        res[p.line] = res[p.line]||[];
-        res[p.line].push(p);
-    });
-    return res;
-};
 
 // sync
 
