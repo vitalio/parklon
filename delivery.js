@@ -358,7 +358,7 @@ const copy_result = ()=>{
     input.remove();
     $('#copy').text('Copied');
     console.log('copied');
-    setTimeout(()=>$('#copy').text('Copy'), 150);
+    setTimeout(()=>$('#copy').text('Copy'), 250);
 };
 
 $(document).ready(init);
