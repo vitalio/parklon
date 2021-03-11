@@ -99,17 +99,6 @@ async function main(){
     }
 }
 
-async function get_live_routes(type, city_id, opt){
-    const conf = await config.get_all();
-    const type2products = api.get_products_by_type(conf.products);
-    const prod = type2products[type][0].id;
-    const scrapper = new Scrapper();
-    await scrapper.add_to_basket(prod);
-    const {routes} = await scrapper.get_routes(city_id, conf.cities[city_id],
-        opt);
-    return routes;
-}
-
 class Scrapper extends api.BaseScrapper {
     constructor(){
         super();
