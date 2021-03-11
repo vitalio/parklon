@@ -217,6 +217,12 @@ export class BaseScrapper {
         return await this.get(url, {method: 'POST', input: 'form',
             output: 'json', body, headers});
     }
+    parse(data){
+        throw new Error('You have to implement method parse');
+    }
+    select(parsed, selector){
+        throw new Error('You have to implement method select');
+    }
     async get_order_data(city_name){
         let data = await this.get(PARKLON_ORDER_URL);
         if (city_name && !data.includes(city_name))
