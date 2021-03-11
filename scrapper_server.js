@@ -16,7 +16,7 @@ async function init(){
     app.listen(PORT);
 }
 
-async function get_live_routes = (req, res)=>{
+async function get_live_routes(req, res){
     const {type, city_id} = req.query;
     const prod = type2products[type][0].id;
     const scrapper = new api_node.Scrapper();
