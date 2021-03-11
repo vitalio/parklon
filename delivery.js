@@ -121,17 +121,16 @@ async function on_screen(){
         canvas.toBlob(blob=>active_blob = blob);
         $('#screen').removeClass('process');
         $('#screen').addClass('waiting');
-        //canvas.toBlob(blob=>saveAs(blob, 'parklon_delivery.png'));
-        /*const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
-            'image/octet-stream');
-        a.download = 'screen.jpg';
-        a.click();*/
     } catch(e){
         $('#screen').removeClass('process');
         console.error('failed to copy result screen', e);
     }
 }
+
+const clear_screen = ()=>{
+    $('#screen').removeClass('waiting process');
+    active_blob = null;
+};
 
 const set_fatal_error = e=>{
     console.error(e);
@@ -192,13 +191,13 @@ async function on_clear(){
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
-    $('#screen').removeClass('waiting process');
+    clear_screen();
     if (!do_not_remove_city_val)
         $('#city').val('');
     clear_result();
     city_items = [];
     active_city = null;
-    active_blob = null;
+    
 };
 
 async function select_city({label, value}){
@@ -305,6 +304,7 @@ const select_menu = (menu_code, sub_menu_code)=>{
     }
     active_menu_code = menu_code;
     active_sub_menu_code = sub_menu_code;
+    clear_screen();
     set_result(render_result_html(menu_code, sub_menu_code));
 };
 
