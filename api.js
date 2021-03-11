@@ -52,34 +52,39 @@ const if_set = (val, o, name)=>{
     if (val!==undefined)
         o[name] = val;
 };
-const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
+export const get_dur = start=>+((Date.now()-start)/1000).toFixed(2)+'s';
 const is_array = Array.isArray;
 
-export const init_fetch = fetch_api=>async (url, opt={})=>{
-    const req = {};
-    if (opt.method)
-        req.method = opt.method;
-    if (opt.headers)
-        req.headers = opt.headers;
-     if (opt.body)
-        req.body = opt.body;
-    if (opt.input=='form')
-    {
-        const fd = new FormData();
+export const get_fetch = fetch_api=>{
+    const custom_fetch = async (url, opt={})=>{
+        const req = {};
+        if (opt.method)
+            req.method = opt.method;
+        if (opt.headers)
+            req.headers = opt.headers;
         if (opt.body)
+            req.body = opt.body;
+        if (opt.input=='form')
         {
-            for (const k in opt.body)
-                fd.append(k, opt.body[k]);
+            const fd = new FormData();
+            if (opt.body)
+            {
+                for (const k in opt.body)
+                    fd.append(k, opt.body[k]);
+            }
+            assign(req, {
+                method: 'POST',
+                body: fd,
+            });
         }
-        assign(req, {
-            method: 'POST',
-            body: fd,
-        });
-    }
-    const res = await fetch_api(url, req);
-    if (opt.output=='json')
-        return await res.json();
-    return await res.text();
+        const res = await fetch_api(url, req);
+        if (opt.output=='json')
+            return await res.json();
+        return await res.text();
+    };
+    const fetch_json = async (url, opt={})=>await custom_fetch(url,
+        assign(opt, {output: 'json'}));
+    return {custom_fetch, fetch_json};
 };
 
 // products
