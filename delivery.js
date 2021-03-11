@@ -127,6 +127,11 @@ async function on_screen(){
     }
 }
 
+const clear_screen = ()=>{
+    $('#screen').removeClass('waiting process');
+    active_blob = null;
+};
+
 const set_fatal_error = e=>{
     console.error(e);
     $('#error').text(e);
@@ -186,13 +191,13 @@ async function on_clear(){
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
-    $('#screen').removeClass('waiting process');
+    clear_screen();
     if (!do_not_remove_city_val)
         $('#city').val('');
     clear_result();
     city_items = [];
     active_city = null;
-    active_blob = null;
+    
 };
 
 async function select_city({label, value}){
@@ -299,6 +304,7 @@ const select_menu = (menu_code, sub_menu_code)=>{
     }
     active_menu_code = menu_code;
     active_sub_menu_code = sub_menu_code;
+    clear_screen();
     set_result(render_result_html(menu_code, sub_menu_code));
 };
 
