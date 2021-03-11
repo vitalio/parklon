@@ -326,7 +326,7 @@ export class BaseScrapper {
         })
         return lines;
     }
-    async get_products(line_id, line_url){
+    async get_line_products(line_id, line_url){
         const data = await this.get(line_url);
         const {$, parsed} = this.parse(data);
         const products = [];
@@ -360,6 +360,16 @@ export class BaseScrapper {
             products.push({id, type, line: line_id, category, title, imgs,
                 sizes, price, url});
         });
+        return products;
+    }
+    async get_products(){
+        const lines = await this.get_product_lines();
+        const products = [];
+        for (const line of lines)
+        {
+            Array.prototype.push.apply(products,
+                await this.get_line_products(line.id, line.url));
+        }
         return products;
     }
 }
@@ -396,7 +406,7 @@ export class Sync {
         for (const line of lines)
         {
             console.log(`getting products for [${line.id}]...`);
-            const _products = await this.scrapper.get_products(line.id,
+            const _products = await this.scrapper.get_line_products(line.id,
                 line.url);
             _products.forEach(p=>{
                 if (!types.includes(p.type))

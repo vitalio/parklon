@@ -4,13 +4,20 @@ const api = require('./api.js');
 const api_node = require('./api_node.js');
 const express = require('express');
 const cors = require('cors');
+const cities = require('./cities.json');
+const products = require('./products.json');
 const PORT = process.env.PORT||80;
 
 let conf, type2products;
 
 async function init(){
-    const {config} = api_node.init();
-    conf = await config.get_all();
+    if (process.env.use_config)
+    {
+        const {config} = api_node.init();
+        conf = await config.get_all();
+    }
+    else
+        conf = {cities, products};
     type2products = api.get_products_by_type(conf.products);
     const app = express();
     app.use(cors());
@@ -22,7 +29,11 @@ async function get_live_routes(req, res){
     const start = Date.now();
     const {type, city_id} = req.query;
     console.log(`get_live_routes`, req.query);
+    if (!type2products[type] || !type2products[type][0])
+        return res.sendStatus(404);
     const prod = type2products[type][0].id;
+    if (!prod)
+        return res.sendStatus(404);
     const scrapper = new api_node.Scrapper();
     await scrapper.add_to_basket(prod);
     const result = await scrapper.get_routes(city_id, conf.cities[city_id]);

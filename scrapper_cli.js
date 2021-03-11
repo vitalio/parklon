@@ -3,6 +3,8 @@ require = require('esm')(module);
 const getopts = require('getopts');
 const api = require('./api.js');
 const {restdb, config, scrapper, sync} = require('./api_node.js').init();
+const cities = require('./cities.json');
+const products = require('./products.json');
 
 const help = `Usage: node scrapper.js [options] [command] [params]
 
@@ -11,6 +13,7 @@ Options:
   -c, --city=           filter city or cities in sync
   -s, --save            save in sync
   -S, --skip_cities=    skip number of cities in sync
+  -C, --config          use config to get cities and products
   -v, --verbose         verbose output
   -h, --help            show usage
 
@@ -25,7 +28,8 @@ Commands:
   get_basket_id
   del_from_basket       basket_id
   get_product_lines
-  get_products          line_id line_url
+  get_line_products     line_id line_url
+  get_products
   get_conf              conf_name
   get_all_conf
   get_total             type [collection]
@@ -81,8 +85,11 @@ async function main(){
     case 'get_product_lines':
         print_json(await scrapper.get_product_lines());
         break;
+    case 'get_line_products':
+        print_json(await scrapper.get_line_products(arg1, arg2));
+        break;
     case 'get_products':
-        print_json(await scrapper.get_products(arg1, arg2));
+        print_json(await scrapper.get_products());
         break;
     case 'get_conf':
         print_json(await config.get(arg1));
@@ -100,7 +107,8 @@ async function main(){
     case 'get_live_routes':
         {
             const type = arg1, city = arg2;
-            const conf = await config.get_all();
+            const conf = opt.config ? await config.get_all()
+                : {cities, products};
             const type2products = api.get_products_by_type(conf.products);
             const prod = type2products[type][0].id;
             await scrapper.add_to_basket(prod);
