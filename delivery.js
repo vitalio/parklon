@@ -115,10 +115,12 @@ async function on_screen(){
         }
         return;
     }
-    $('#screen').addClass('waiting');
+    $('#screen').addClass('process');
     try {
         const canvas = await html2canvas(document.querySelector('#result'));
         canvas.toBlob(blob=>active_blob = blob);
+        $('#screen').removeClass('process');
+        $('#screen').addClass('waiting');
         //canvas.toBlob(blob=>saveAs(blob, 'parklon_delivery.png'));
         /*const a = document.createElement('a');
         a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg',
@@ -126,7 +128,7 @@ async function on_screen(){
         a.download = 'screen.jpg';
         a.click();*/
     } catch(e){
-        $('#screen').removeClass('waiting');
+        $('#screen').removeClass('process');
         console.error('failed to copy result screen', e);
     }
 }
