@@ -13,7 +13,7 @@ async function init(){
     type2products = api.get_products_by_type(conf.products);
     const app = express();
     app.get('/get_live_routes', get_live_routes);
-    app.listen(PORT);
+    app.listen(PORT, ()=>console.log(`Listening on ${ PORT }`));
 }
 
 async function get_live_routes(req, res){
