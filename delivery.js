@@ -29,7 +29,7 @@ let active_blob, active_city, city_items = [];
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
-        return await fetch_json(url, opt);
+        return fetch_json(url, opt);
     }
 }
 
