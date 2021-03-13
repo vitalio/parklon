@@ -4,6 +4,7 @@ main { display: none; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
 #catalog .list-group-item { padding: 5px; }
+#catalog .list-group-item .price { white-space: nowrap; }
 #catalog .list-group-item img {
     max-width: 60px;
     height: 40px;
