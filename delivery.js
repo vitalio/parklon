@@ -52,8 +52,8 @@ async function init(){
         {
             if (use_local_conf)
             {
-                conf.cities = await fetch_json('./cities.json');
-                conf.products = await fetch_json('./products.json');
+                conf.cities = await fetch_json('./data/cities.json');
+                conf.products = await fetch_json('./data/products.json');
             }
             else
             {
