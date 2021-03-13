@@ -1,11 +1,11 @@
 /*jshint esversion: 8*/
 require = require('esm')(module);
-const api = require('./api.js');
-const api_node = require('./api_node.js');
+const api = require('./api/api.js');
+const api_node = require('./api/api_node.js');
 const express = require('express');
 const cors = require('cors');
-const cities = require('./cities.json');
-const products = require('./products.json');
+const cities = require('./data/cities.json');
+const products = require('./data/products.json');
 const PORT = process.env.PORT||80;
 
 let conf, type2products;
@@ -26,7 +26,12 @@ async function init(){
     const app = express();
     app.use(cors());
     app.get('/live_routes', get_live_routes);
+    app.get('/ping', ping);
     app.listen(PORT, ()=>console.log(`Listening on ${PORT}`));
+}
+
+async function ping(req, res){
+    res.send('ok');
 }
 
 async function get_live_routes(req, res){

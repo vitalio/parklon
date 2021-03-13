@@ -1,5 +1,5 @@
 /*jshint esversion: 8*/
-import * as api from "./api.js";
+import * as api from "./api/api.js";
 
 const DAYS_ADD = 3;
 const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
@@ -29,7 +29,7 @@ let active_blob, active_city, city_items = [];
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
-        return await fetch_json(url, opt);
+        return fetch_json(url, opt);
     }
 }
 
@@ -52,8 +52,8 @@ async function init(){
         {
             if (use_local_conf)
             {
-                conf.cities = await fetch_json('./cities.json');
-                conf.products = await fetch_json('./products.json');
+                conf.cities = await fetch_json('./data/cities.json');
+                conf.products = await fetch_json('./data/products.json');
             }
             else
             {
@@ -197,7 +197,6 @@ const deselect_city = do_not_remove_city_val=>{
     clear_result();
     city_items = [];
     active_city = null;
-    
 };
 
 async function select_city({label, value}){
@@ -389,9 +388,10 @@ async function on_copy(){
         return;
     $('#copy').addClass('process');
     try {
-        const text = render_result_text(active_menu_code, active_sub_menu_code);
+        const text = render_result_text(active_menu_code,
+            active_sub_menu_code);
         await navigator.clipboard.writeText(text);
-        console.log('text copied'); 
+        console.log('text copied');
         await api.wait(250);
         $('#copy').removeClass('process');
     } catch(e){

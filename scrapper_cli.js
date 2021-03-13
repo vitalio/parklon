@@ -1,8 +1,8 @@
 /*jshint esversion: 8*/
 require = require('esm')(module);
 const getopts = require('getopts');
-const api = require('./api.js');
-const {restdb, config, scrapper, sync} = require('./api_node.js').init();
+const api = require('./api/api.js');
+const {restdb, config, scrapper, sync} = require('./api/api_node.js').init();
 const cities = require('./cities.json');
 const products = require('./products.json');
 

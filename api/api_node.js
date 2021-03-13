@@ -47,7 +47,7 @@ class Scrapper extends api.BaseScrapper {
 const init = ()=>{
     const restdb = new api.RestDB(class extends api.BaseRestDBInstance {
         async fetch_json(url, opt){
-            return await fetch_json(url, opt);
+            return fetch_json(url, opt);
         }
     });
     const config = new api.Conf(restdb);
