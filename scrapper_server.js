@@ -1,7 +1,7 @@
 /*jshint esversion: 8*/
 require = require('esm')(module);
-const api = require('./api.js');
-const api_node = require('./api_node.js');
+const api = require('./api/api.js');
+const api_node = require('./api/api_node.js');
 const express = require('express');
 const cors = require('cors');
 const cities = require('./data/cities.json');
