@@ -147,7 +147,7 @@ const init_catalog = ()=>{
         const titles = conf.type2products[type].map(p=>p.title).join(', ');
         html += '<a class="list-group-item list-group-item-action" '
             +`data-type="${type}"><div class="d-flex">`
-            +`<img src="${img}" class="me-3">`
+            +`<img src="${img}" class="me-2">`
             +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
             +`<h5 class="mb-1">${type}</h5>`
