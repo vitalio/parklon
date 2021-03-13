@@ -151,7 +151,7 @@ const init_catalog = ()=>{
             +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
             +`<h5 class="mb-1">${type}</h5>`
-            +`<small>${prod.price}</small>`
+            +`<small class="price">${prod.price}</small>`
             +'</div>'
             +`<small>${titles}</small></div></div>`
             +'</a>';
