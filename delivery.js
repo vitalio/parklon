@@ -150,7 +150,7 @@ const init_catalog = ()=>{
             +`<img src="${img}" class="me-2">`
             +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
-            +`<h5 class="mb-1">${type}</h5>`
+            +`<h5 class="mb-1 title">${type.replace(/ /g, '')}</h5>`
             +`<small class="price">${prod.price}</small>`
             +'</div>'
             +`<small>${titles}</small></div></div>`
