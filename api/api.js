@@ -234,8 +234,6 @@ export class BaseScrapper {
     }
     async get_order_data(city_name){
         let data = await this.get(PARKLON_ORDER_URL);
-        if (city_name && !data.includes(city_name))
-            throw new Error(`order city mismatch, expect [${city_name}]`);
         const token_s = 'var JSCustomOrderAjaxArea = new JSCustomOrderAjax(';
         data = data.substr(data.indexOf(token_s)+token_s.length);
         const token_e = 'JSCustomOrderAjaxArea.init()';
