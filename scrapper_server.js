@@ -45,8 +45,12 @@ async function get_live_routes(req, res){
         return res.sendStatus(404);
     const scrapper = new api_node.Scrapper();
     await scrapper.add_to_basket(prod);
-    const result = await scrapper.get_routes(city_id, conf.cities[city_id]);
-    res.json(Object.assign(result, {dur: Date.now()-start}));
+    try {
+        const result = await scrapper.get_routes(city_id, conf.cities[city_id]);
+        res.json(Object.assign(result, {dur: Date.now()-start}));
+    } catch(e){
+        res.status(500).send(e.message);
+    }
 }
 
 init();
