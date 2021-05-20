@@ -143,14 +143,17 @@ const init_catalog = ()=>{
     for (const type in conf.type2products)
     {
         const prod = conf.type2products[type][0];
+        const img = prod.imgs && prod.imgs[0];
         const titles = conf.type2products[type].map(p=>p.title).join(', ');
         html += '<a class="list-group-item list-group-item-action" '
-            +`data-type="${type}">`
+            +`data-type="${type}"><div class="d-flex">`
+            +`<img src="${img}" class="me-2">`
+            +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
-            +`<h5 class="mb-1">${type}</h5>`
-            +`<small>${prod.price}</small>`
+            +`<h5 class="mb-1 title">${type.replace(/ /g, '')}</h5>`
+            +`<small class="price">${prod.price}</small>`
             +'</div>'
-            +`<small>${titles}</small>`
+            +`<small>${titles}</small></div></div>`
             +'</a>';
     }
     html += '</div>';

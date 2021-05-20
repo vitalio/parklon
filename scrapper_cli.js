@@ -3,8 +3,8 @@ require = require('esm')(module);
 const getopts = require('getopts');
 const api = require('./api/api.js');
 const {restdb, config, scrapper, sync} = require('./api/api_node.js').init();
-const cities = require('./cities.json');
-const products = require('./products.json');
+const cities = require('./data/cities.json');
+const products = require('./data/products.json');
 
 const help = `Usage: node scrapper.js [options] [command] [params]
 

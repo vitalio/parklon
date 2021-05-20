@@ -3,6 +3,22 @@ body { padding-top: 10px; }
 main { display: none; }
 .result .nav { margin-top: 5px; }
 #result { margin-top: 5px; }
+#city { border-color: #333; }
+#catalog .list-group-item { padding: 5px; }
+#catalog .list-group-item.active {
+    background: none;
+    color: #333;
+    border-color: #333;
+}
+#catalog .list-group-item .title {
+    font-size: 15px;
+    white-space: nowrap;
+}
+#catalog .list-group-item .price { white-space: nowrap; }
+#catalog .list-group-item img {
+    max-width: 60px;
+    height: 40px;
+}
 a { cursor: pointer; }
 button.waiting {
     background-color: #212529!important;
