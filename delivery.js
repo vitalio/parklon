@@ -239,14 +239,16 @@ async function select_city({label, value}){
                 menu.pvz.count++;
                 sub_menu.all.count++;
                 const {code} = item;
-                city_items.push(assign(item, {menu: 'pvz', sub_menu: code}));
+                city_items.push(assign(item,
+                    {menu: 'pvz', sub_menu: code, live}));
                 if (sub_menu[code])
                     return sub_menu[code].count++;
                 const label = item.name.substr(10);
-                sub_menu[code] = {label, code, count: 1, parent_code: 'pvz'};
+                sub_menu[code] = {label, code, count: 1, parent_code: 'pvz',
+                    live};
             });
         }
-        render_menu();
+        render_menu(live);
         select_menu('all');
         active_city = value;
     } catch(e){
@@ -255,7 +257,7 @@ async function select_city({label, value}){
     }
 }
 
-const render_menu = ()=>{
+const render_menu = live=>{
     let html = '';
     for (const code in menu)
     {
@@ -266,6 +268,7 @@ const render_menu = ()=>{
             +'</li>';
     }
     $('#menu').html(html);
+    $('#menu').toggleClass('bg-warning bg-gradient', !live);
     html = '';
     for (const code in sub_menu)
     {
