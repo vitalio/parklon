@@ -6,7 +6,7 @@ const {restdb, config, scrapper, sync} = require('./api/api_node.js').init();
 const cities = require('./data/cities.json');
 const products = require('./data/products.json');
 
-const help = `Usage: node scrapper.js [options] [command] [params]
+const help = `Usage: node --max-http-header-size 15000 scrapper.js [options] [command] [params]
 
 Options:
   -t, --type=           filter type or types in sync
@@ -83,13 +83,13 @@ async function main(){
         console.log(await scrapper.del_from_basket(arg1));
         break;
     case 'get_product_lines':
-        print_json(await scrapper.get_product_lines());
+        print_json(await scrapper.get_product_lines(opt));
         break;
     case 'get_line_products':
         print_json(await scrapper.get_line_products(arg1, arg2));
         break;
     case 'get_products':
-        print_json(await scrapper.get_products());
+        print_json(await scrapper.get_products(opt));
         break;
     case 'get_conf':
         print_json(await config.get(arg1));
