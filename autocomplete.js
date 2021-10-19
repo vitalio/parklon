@@ -80,8 +80,20 @@ class Autocomplete {
     const items = this.field.nextSibling;
     items.innerHTML = '';
 
-    let count = 0;
+    let count = 0, indexes = [];
     for (let i = 0; i < this.options.data.length; i++) {
+      const {label, value} = this.options.data[i];
+      const item = {label, value};
+      if (item.label.toLowerCase().startsWith(lookup.toLowerCase())) {
+        indexes.push(i);
+        items.appendChild(this.createItem(lookup, item));
+        if (this.options.maximumItems > 0 && ++count >= this.options.maximumItems)
+          break;
+      }
+    }
+    for (let i = 0; i < this.options.data.length; i++) {
+      if (indexes.includes(i))
+          continue;
       const {label, value} = this.options.data[i];
       const item = {label, value};
       if (item.label.toLowerCase().indexOf(lookup.toLowerCase()) >= 0) {
