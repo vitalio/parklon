@@ -313,8 +313,8 @@ export class BaseScrapper {
             && res.SaleResult.GRID.ROWS || {})[0];
     }
     // product
-    async get_product_lines(){
-        const data = await this.get(PARKLON_CATALOG_URL);
+    async get_product_lines(opt={}){
+        const data = await this.get(PARKLON_CATALOG_URL, opt);
         const {$, parsed} = this.parse(data);
         const lines = [];
         this.select(parsed, '#drop-lines-menu a').each(function(i){
@@ -363,8 +363,8 @@ export class BaseScrapper {
         });
         return products;
     }
-    async get_products(){
-        const lines = await this.get_product_lines();
+    async get_products(opt={}){
+        const lines = await this.get_product_lines(opt);
         const products = [];
         for (const line of lines)
         {
@@ -401,7 +401,7 @@ export class Sync {
         const start = Date.now();
         console.log('started sync products');
         console.log('getting product lines...');
-        const lines = await this.scrapper.get_product_lines();
+        const lines = await this.scrapper.get_product_lines(opt);
         console.log(`got [${lines.length}] product lines`, lines);
         const products = [], types = [];
         for (const line of lines)
