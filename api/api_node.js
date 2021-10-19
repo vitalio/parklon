@@ -17,7 +17,9 @@ class Scrapper extends api.BaseScrapper {
         super();
         this.jar = new tough.CookieJar();
     }
-    async get(url){
+    async get(url, opt={}){
+        if (opt.verbose)
+            console.log('GET', url);
         const {data} = await axios.get(url, {
             jar: this.jar,
             withCredentials: true,
