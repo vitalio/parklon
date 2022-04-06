@@ -1,5 +1,6 @@
 /*jshint esversion: 8*/
 require = require('esm')(module);
+const https  = require('https');
 const axios  = require('axios');
 const cheerio = require('cheerio');
 const FormData = require('form-data');
@@ -15,26 +16,25 @@ const {fetch_json} = api.get_fetch(fetch);
 class Scrapper extends api.BaseScrapper {
     constructor(){
         super();
-        this.jar = new tough.CookieJar();
+        this.axios_conf = {
+            jar: new tough.CookieJar(),
+            withCredentials: true,
+            httpsAgent: new https.Agent({rejectUnauthorized: false}),
+        };
     }
     async get(url, opt={}){
         if (opt.verbose)
             console.log('GET', url);
-        const {data} = await axios.get(url, {
-            jar: this.jar,
-            withCredentials: true,
-        });
+        const {data} = await axios.get(url, this.axios_conf);
         return data;
     }
     async post(url, body, headers){
         const fd = new FormData();
         for (const k in body)
             fd.append(k, body[k]);
-        const {data} = await axios.post(url, fd, {
-            jar: this.jar,
-            withCredentials: true,
+        const {data} = await axios.post(url, fd, Object.assign({
             headers: Object.assign(fd.getHeaders(), headers),
-        });
+        }, this.axios_conf));
         return data;
     }
     parse(data){
