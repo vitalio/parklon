@@ -1,3 +1,3 @@
-# parklon
+Web application to calculate delivery price for Parklon products
 
-https://vitalio.github.io/parklon/delivery.html
+Link: https://vitalio.github.io/parklon/delivery.html
