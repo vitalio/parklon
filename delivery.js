@@ -17,6 +17,8 @@ const qs = new URLSearchParams(window.location.search);
 const use_local_conf = init_from_qs('use_local_conf', USE_LOCAL_CONF);
 const use_live_routes = init_from_qs('use_live_routes', USE_LIVE_ROUTES);
 
+const fmt_int = x=>x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
 if (use_local_conf)
     console.log('use local conf');
 
@@ -151,8 +153,11 @@ const init_catalog = ()=>{
             +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
             +`<h5 class="mb-1 title">${type.replace(/ /g, '')}</h5>`
-            +`<small class="price">${prod.price}</small>`
-            +'</div>'
+            +`<small class="price">${fmt_int(prod.price)} ₽ `
+            +(prod.discount ?
+                `<span class="badge bg-secondary">-${prod.discount}%</span>`
+                : '')
+            +'</small></div>'
             +`<small>${titles}</small></div></div>`
             +'</a>';
     }
