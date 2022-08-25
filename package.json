@@ -7,7 +7,7 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "form-data": "^4.0.0",
-    "node-fetch": "^2.6.5",
+    "node-fetch": "^2.6.7",
     "tough-cookie": "^4.0.0"
   },
   "name": "parklon",
