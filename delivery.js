@@ -157,7 +157,7 @@ const init_catalog = ()=>{
             +(prod.discount ?
                 `<span class="badge bg-secondary">-${prod.discount}%</span> `
                 : '')
-            +'${fmt_int(prod.price)} ₽</small></div>'
+            +`${fmt_int(prod.price)} ₽</small></div>`
             +`<small>${titles}</small></div></div>`
             +'</a>';
     }
