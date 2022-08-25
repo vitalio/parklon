@@ -87,6 +87,8 @@ export const get_fetch = fetch_api=>{
     return {custom_fetch, fetch_json};
 };
 
+const str2int = str=>+str.replace(/ /g, '').match(/\d+/g)[0];
+
 // products
 
 export const get_products_by_type = products=>{
@@ -324,7 +326,7 @@ export class BaseScrapper {
             const name = el.text();
             const id = name.toLowerCase().replace(/ /g, '_');
             lines.push({id, url: PARKLON_BASE_URL+el.attr('href'), name});
-        })
+        });
         return lines;
     }
     async get_line_products(line_id, line_url){
@@ -341,7 +343,18 @@ export class BaseScrapper {
             const url = a && PARKLON_BASE_URL+a.attr('href');
             const category = get_el_text(el.find('.popular-carpets__title'));
             const title = get_el_text(el.find('.popular-carpets__sub-title'));
-            const price = get_el_text(el.find('.popular-carpets__price'));
+            const prices = get_el_text(el.find('.popular-carpets__price'))
+                .split('\n').map(s=>s.trim()).filter(s=>s);
+            let price, discount, discounted_price;
+            prices.forEach(p=>{
+                if (p.includes('%'))
+                    return void(discount = str2int(p));
+                if (!price)
+                    return void(price = str2int(p));
+                p = str2int(p);
+                discounted_price = Math.min(price, p);
+                price = Math.max(price, p);
+            });
             const sizes = [];
             el.find('.popular-carpets__sizes').each(function(){
                 const childs = $(this).find('p');
@@ -359,7 +372,7 @@ export class BaseScrapper {
             });
             const type = sizes.map(s=>s.value).join(',');
             products.push({id, type, line: line_id, category, title, imgs,
-                sizes, price, url});
+                sizes, price, prices, discount, discounted_price, url});
         });
         return products;
     }
