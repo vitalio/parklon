@@ -6,7 +6,7 @@ const {restdb, config, scrapper, sync} = require('./api/api_node.js').init();
 const cities = require('./data/cities.json');
 const products = require('./data/products.json');
 
-const help = `Usage: node --max-http-header-size 15000 scrapper.js [options] [command] [params]
+const help = `Usage: node --max-http-header-size 15000 scrapper_cli.js [options] [command] [params]
 
 Options:
   -t, --type=           filter type or types in sync

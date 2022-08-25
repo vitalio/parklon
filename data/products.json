@@ -1,32 +1,5 @@
 [
     {
-        "id": "162",
-        "type": "200x140 см,1 см,PE",
-        "line": "portable",
-        "category": "Детский коврик Portable",
-        "title": "Малышарики",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/7bd/330_216_2/7bd6fb322ab294cb3b3aa93ef9a050bf.png",
-            "https://parklon.ru/upload/resize_cache/iblock/051/330_216_2/0511fee6252cded5c1b833d72e859273.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "5 880 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-200x140x1-sm-malyshariki/"
-    },
-    {
         "id": "159",
         "type": "200x140 см,1 см,PE",
         "line": "portable",
@@ -50,35 +23,11 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-140x200x1sm-lesnye-tropinki/"
-    },
-    {
-        "id": "124",
-        "type": "200x140 см,1 см,PE",
-        "line": "portable",
-        "category": "Детский коврик Portable",
-        "title": "Деревянные лошадки",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/08b/330_216_2/08bd22ef9334a1693d3aa147b7cb9e49.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/cfe/330_216_2/cfe327b7ad7988a456c2e93c2a3e2e9e.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "5 880 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-140x200x1-sm-derevyannye-loshadki/"
     },
     {
         "id": "170",
@@ -104,8 +53,101 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-140x200x1-sm-na-piknik/"
+    },
+    {
+        "id": "380",
+        "type": "200x140 см,1 см,PE",
+        "line": "portable",
+        "category": "Детский коврик Portable",
+        "title": "Цыплята",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/728/330_216_2/7286a3444aa7fa6c48b5cad0339c4dea.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/934/330_216_2/9347aa0697a45d0457d830f2984894ed.png"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "200x140 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PE"
+            }
+        ],
+        "price": 4700,
+        "prices": [
+            "4 700 руб."
+        ],
+        "url": "https://parklon.ru/catalog/portativnyy_kovrik_portable_140x200x1_sm_tsyplyata/"
+    },
+    {
+        "id": "379",
+        "type": "200x140 см,1 см,PE",
+        "line": "portable",
+        "category": "Детский коврик Portable",
+        "title": "Лес чудес",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/c08/330_216_2/c08007d964759b60d7aa65f675306eea.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/a8b/330_216_2/a8b30562f49956e8c5b5ada394d31956.png"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "200x140 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PE"
+            }
+        ],
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
+        "url": "https://parklon.ru/catalog/portativnyy_kovrik_portable_140x200x1_sm_les_chudes/"
+    },
+    {
+        "id": "377",
+        "type": "200x140 см,1 см,PE",
+        "line": "portable",
+        "category": "Детский коврик Portable",
+        "title": "Цирк",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/715/330_216_2/715987ed21c9b28b090e30c7615f031e.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/39f/330_216_2/39f6f3322c70bccd96d2cb79bd82b6a1.png"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "200x140 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PE"
+            }
+        ],
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
+        "url": "https://parklon.ru/catalog/portativnyy_kovrik_portable_140x200x1_sm_tsirk/"
     },
     {
         "id": "352",
@@ -131,7 +173,10 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/portativnyy_kovrik_portable_140x200x1sm_solnechnyy_limonchik/"
     },
     {
@@ -158,7 +203,10 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/portativnyy_kovrik_portable_140x200x1sm_pryatki/"
     },
     {
@@ -168,8 +216,8 @@
         "category": "Детский коврик Portable",
         "title": "Весёлый счёт",
         "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/8bc/330_216_2/8bc374a93cd445b851b5af45cd0c6941.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/4e1/330_216_2/4e1f674700689a05e8e0f38b0caf313d.jpg"
+            "https://parklon.ru/upload/resize_cache/iblock/b0e/330_216_2/b0ec0abb4232cd3a078de71d72eec395.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/21e/330_216_2/21e2c78a8cd8ea897daad09535554e30.jpg"
         ],
         "sizes": [
             {
@@ -185,7 +233,10 @@
                 "value": "PE"
             }
         ],
-        "price": "4 900 руб.",
+        "price": 4700,
+        "prices": [
+            "4 700 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik_detskiy_igrovoy_portativnyy_140kh200kh1_sm_vesyelyy_schet/"
     },
     {
@@ -212,8 +263,45 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "4 667 руб.",
+            "5 490 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 4667,
         "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-140x200x1-sm-podvodnyy-mir/"
+    },
+    {
+        "id": "162",
+        "type": "200x140 см,1 см,PE",
+        "line": "portable",
+        "category": "Детский коврик Portable",
+        "title": "Малышарики",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/3b7/330_216_2/3b792bad84c47e6c92e871622777744a.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/051/330_216_2/0511fee6252cded5c1b833d72e859273.jpg"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "200x140 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PE"
+            }
+        ],
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
+        "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-200x140x1-sm-malyshariki/"
     },
     {
         "id": "140",
@@ -239,8 +327,41 @@
                 "value": "PE"
             }
         ],
-        "price": "5 880 руб.",
+        "price": 5490,
+        "prices": [
+            "5 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-detskij-skladnoj-140x200x1sm-veselaya-progulka/"
+    },
+    {
+        "id": "330",
+        "type": "200x180 см,1 см,PE",
+        "line": "prime_living",
+        "category": "Детский коврик Prime Living",
+        "title": "Зоополис",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/57a/330_216_2/57a1634a6f5c63c510e68b9d137613b3.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/35d/330_216_2/35dcbfc81542d37ca7e2fd664e46e67f.jpg"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "200x180 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PE"
+            }
+        ],
+        "price": 5480,
+        "prices": [
+            "5 480 руб."
+        ],
+        "url": "https://parklon.ru/catalog/kovrik_prime_living_180x200x1_sm_zoopolis/"
     },
     {
         "id": "157",
@@ -266,35 +387,11 @@
                 "value": "PE"
             }
         ],
-        "price": "7 500 руб.",
+        "price": 6875,
+        "prices": [
+            "6 875 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-prime-living-180x200x1-5-sm-koaly-sloniki-za-khvostiki/"
-    },
-    {
-        "id": "156",
-        "type": "200x180 см,1 см,PE",
-        "line": "prime_living",
-        "category": "Детский коврик Prime Living",
-        "title": "Три поросенка",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/ba7/330_216_2/ba75fba6fa93a9304535cc81de506fe5.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/a2a/330_216_2/a2ab81217b99fba480de444dd2a55510.JPG"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x180 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "5 988 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-prime-living-180x200x1-sm-tri-porosenka/"
     },
     {
         "id": "132",
@@ -320,7 +417,10 @@
                 "value": "PE"
             }
         ],
-        "price": "5 988 руб.",
+        "price": 5480,
+        "prices": [
+            "5 480 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-prime-living-180x200x1-sm-koaly-sloniki-za-khvostiki/"
     },
     {
@@ -347,7 +447,10 @@
                 "value": "PE"
             }
         ],
-        "price": "5 520 руб.",
+        "price": 5090,
+        "prices": [
+            "5 090 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-prime-living-150x200x1-sm-koaly-shchenochki/"
     },
     {
@@ -374,35 +477,11 @@
                 "value": "PE"
             }
         ],
-        "price": "5 988 руб.",
+        "price": 5480,
+        "prices": [
+            "5 480 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-prime-living-180x200x1-sm-mishka-na-kanikulakh-dorogi/"
-    },
-    {
-        "id": "127",
-        "type": "200x180 см,1 см,PE",
-        "line": "prime_living",
-        "category": "Детский коврик Prime Living",
-        "title": "Совята/Слоники",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/841/330_216_2/8412c1699f8ef4f2e910efb751f51138.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/155/330_216_2/155b943ea6f512eeeb32ef53cdb05144.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x180 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "5 988 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-prime-living-180x200x1-sm-sovyata-sloniki/"
     },
     {
         "id": "126",
@@ -428,7 +507,10 @@
                 "value": "PE"
             }
         ],
-        "price": "5 520 руб.",
+        "price": 5090,
+        "prices": [
+            "5 090 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-prime-living-150x200x1-sm-kotiki-veselyy-gorod/"
     },
     {
@@ -455,35 +537,15 @@
                 "value": "PVC"
             }
         ],
-        "price": "15 480 руб.",
+        "price": 13900,
+        "prices": [
+            "11 815 руб.",
+            "13 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 11815,
         "url": "https://parklon.ru/catalog/kovrik_pure_soft_190x130x1_2_sm_khyugge/"
-    },
-    {
-        "id": "137",
-        "type": "190x130 см,1.2 см,PVC",
-        "line": "pure_soft",
-        "category": "Детский коврик Pure Soft",
-        "title": "Монстера/Холмы",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/bfe/330_216_2/bfe8c68cbf03820f6720cdcca124347f.png",
-            "https://parklon.ru/upload/resize_cache/iblock/235/330_216_2/2351b9981fcebf6db2d11a2c77c71197.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "190x130 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1.2 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PVC"
-            }
-        ],
-        "price": "15 480 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-pure-soft-190x130x1-2-sm-monstera-kholmy/"
     },
     {
         "id": "135",
@@ -509,7 +571,14 @@
                 "value": "PVC"
             }
         ],
-        "price": "15 480 руб.",
+        "price": 13900,
+        "prices": [
+            "11 815 руб.",
+            "13 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 11815,
         "url": "https://parklon.ru/catalog/kovrik-pure-soft-190x130x1-2-sm-art-deko-zoopark/"
     },
     {
@@ -536,7 +605,14 @@
                 "value": "PVC"
             }
         ],
-        "price": "15 480 руб.",
+        "price": 13900,
+        "prices": [
+            "11 815 руб.",
+            "13 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 11815,
         "url": "https://parklon.ru/catalog/kovrik-pure-soft-190x130x1-2-sm-lesnye-yagody-linii/"
     },
     {
@@ -563,7 +639,14 @@
                 "value": "PVC"
             }
         ],
-        "price": "15 480 руб.",
+        "price": 13900,
+        "prices": [
+            "11 815 руб.",
+            "13 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 11815,
         "url": "https://parklon.ru/catalog/kovrik-pure-soft-190x130x1-2-sm-kosmos-zigzagi/"
     },
     {
@@ -590,116 +673,15 @@
                 "value": "PVC"
             }
         ],
-        "price": "15 480 руб.",
+        "price": 13900,
+        "prices": [
+            "11 815 руб.",
+            "13 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 11815,
         "url": "https://parklon.ru/catalog/kovrik-pure-soft-190x130x1-2-sm-dorogi-kity/"
-    },
-    {
-        "id": "353",
-        "type": "200x140 см,1 см,PE",
-        "line": "sillky",
-        "category": "Детский коврик Sillky",
-        "title": "Уютные кружочки",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/078/330_216_2/0782c7b8a1b33c20091b60f1c94fefc5.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/500/330_216_2/500d5d0736b46fd1f858b690f398eb9b.png"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "7 800 руб.",
-        "url": "https://parklon.ru/catalog/skladnoy_kovrik_sillky_portable_uyutnye_kruzhochki_140x200x1_sm/"
-    },
-    {
-        "id": "138",
-        "type": "200x140 см,1 см,PE",
-        "line": "sillky",
-        "category": "Детский коврик Sillky",
-        "title": "Облачка",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/737/330_216_2/7370264edf93ce45716329c38d1fc616.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/b0c/330_216_2/b0cc6098525e14adabcee4dc3791ae2a.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "200x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "7 800 руб.",
-        "url": "https://parklon.ru/catalog/skladnoy-kovrik-sillky-portable-oblachka-140x200x1-sm/"
-    },
-    {
-        "id": "130",
-        "type": "230x140 см,1.2 см,PE",
-        "line": "sillky",
-        "category": "Детский коврик Sillky",
-        "title": "Деревянные лошадки",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/df3/330_216_2/df318c47ef432d888446f9be77b2b4f5.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/335/330_216_2/33524994d764fa1ed345b3079d828fa2.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "230x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "1.2 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PE"
-            }
-        ],
-        "price": "9 588 руб.",
-        "url": "https://parklon.ru/catalog/odnostoronniy-kovrik-sillky-230x140x1-2-sm-derevyannye-loshadki/"
-    },
-    {
-        "id": "139",
-        "type": "235x140 см,4 см,PVC/PU",
-        "line": "bubble",
-        "category": "Детский коврик Bubble",
-        "title": "Кактусы/Клетки",
-        "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/799/330_216_2/79998da74520dfcc1126f8b272a6a584.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/e51/330_216_2/e51dcd5bca5e06c9758d3bf2609923dc.jpg"
-        ],
-        "sizes": [
-            {
-                "name": "Размер",
-                "value": "235x140 см"
-            },
-            {
-                "name": "Толщина",
-                "value": "4 см"
-            },
-            {
-                "name": "Материал",
-                "value": "PVC/PU"
-            }
-        ],
-        "price": "29 760 руб.",
-        "url": "https://parklon.ru/catalog/kovrik-bubble-play-kaktusy-kletki-235x140x4-sm/"
     },
     {
         "id": "358",
@@ -708,8 +690,8 @@
         "category": "Детский коврик Bubble",
         "title": "Радуга",
         "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/51b/330_216_2/51b7cee26b34285bb8aab376869797f3.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/4b3/330_216_2/4b367de17f8fa6b72d2cea007fbd0d42.png"
+            "https://parklon.ru/upload/resize_cache/iblock/e76/330_216_2/e7640d248649de0f122b90e59d361b63.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/9b5/330_216_2/9b510267891e8f697acbdfc021593aea.jpg"
         ],
         "sizes": [
             {
@@ -725,7 +707,10 @@
                 "value": "PVC/PU"
             }
         ],
-        "price": "35 760 руб.",
+        "price": 32900,
+        "prices": [
+            "32 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik_bubble_play_150x210x4_sm_raduga/"
     },
     {
@@ -735,8 +720,8 @@
         "category": "Детский коврик Bubble",
         "title": "Парад планет",
         "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/ccb/330_216_2/ccbf329d8e06643e4662224a5fccf81f.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/56f/330_216_2/56f5c085ef04cc089c7c31c998298a75.png"
+            "https://parklon.ru/upload/resize_cache/iblock/66f/330_216_2/66fb0767b8519a3fe86ef9c946aab2bf.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/e53/330_216_2/e53b712901e9baa65f974e30c1ab4645.jpg"
         ],
         "sizes": [
             {
@@ -752,7 +737,10 @@
                 "value": "PVC/PU"
             }
         ],
-        "price": "35 760 руб.",
+        "price": 32900,
+        "prices": [
+            "32 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik_bubble_play_150x210x4_sm_parad_planet/"
     },
     {
@@ -779,7 +767,10 @@
                 "value": "PVC/PU"
             }
         ],
-        "price": "23 400 руб.",
+        "price": 22900,
+        "prices": [
+            "22 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik_bubble_play_190x130x3_sm_nezhnye_sovy_elochki/"
     },
     {
@@ -806,7 +797,10 @@
                 "value": "PVC/PE"
             }
         ],
-        "price": "11 988 руб.",
+        "price": 9900,
+        "prices": [
+            "9 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-eco-clean-210x140x1-3-sm-lesnye-gonki/"
     },
     {
@@ -833,7 +827,10 @@
                 "value": "PVC/PE"
             }
         ],
-        "price": "11 988 руб.",
+        "price": 9900,
+        "prices": [
+            "9 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-eco-clean-210x140x1-3-sm-letuchie-mishki/"
     },
     {
@@ -860,7 +857,10 @@
                 "value": "PVC"
             }
         ],
-        "price": "22 680 руб.",
+        "price": 19900,
+        "prices": [
+            "19 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/portativnyy-kovrik-bonacomo-200x140x1-5-sm-pastoral/"
     },
     {
@@ -887,8 +887,41 @@
                 "value": "PVC"
             }
         ],
-        "price": "17 880 руб.",
+        "price": 14490,
+        "prices": [
+            "14 490 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik-circular-mat-138x138x1-2-sm-tochki/"
+    },
+    {
+        "id": "276",
+        "type": "250x140 см,1.5 см,PVC",
+        "line": "rug_maker",
+        "category": "Детский коврик Rug Maker",
+        "title": "Сидней 1",
+        "imgs": [
+            "https://parklon.ru/upload/resize_cache/iblock/2b9/330_216_2/2b980bfe1fe78ed22aff1442d8a772e4.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/cc4/330_216_2/cc4b5528229798112832aef2d0cab083.jpg"
+        ],
+        "sizes": [
+            {
+                "name": "Размер",
+                "value": "250x140 см"
+            },
+            {
+                "name": "Толщина",
+                "value": "1.5 см"
+            },
+            {
+                "name": "Материал",
+                "value": "PVC"
+            }
+        ],
+        "price": 39900,
+        "prices": [
+            "39 900 руб."
+        ],
+        "url": "https://parklon.ru/catalog/kovrik_rug_maker_250x140x1_5_sm_sidney_1/"
     },
     {
         "id": "274",
@@ -914,7 +947,10 @@
                 "value": "PVC"
             }
         ],
-        "price": "41 880 руб.",
+        "price": 39900,
+        "prices": [
+            "39 900 руб."
+        ],
         "url": "https://parklon.ru/catalog/kovrik_rug_maker_250x140x1_5_sm_parma_3/"
     },
     {
@@ -941,61 +977,78 @@
                 "value": "PVC/PE"
             }
         ],
-        "price": "10 680 руб.",
+        "price": 9790,
+        "prices": [
+            "8 322 руб.",
+            "9 790 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 8322,
         "url": "https://parklon.ru/catalog/skladnoy_detskiy_kovrik_marshmallow_120x200_1_sm_listopad/"
     },
     {
-        "id": "299",
-        "type": "100x140 см,0.5 см,PVC",
-        "line": "cushion",
-        "category": "Детский коврик Cushion",
-        "title": "Соты",
+        "id": "347",
+        "type": "95x44 см,1.2 см,PVC",
+        "line": "kitchen_mat",
+        "category": "Детский коврик Kitchen Mat",
+        "title": "Прованс",
         "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/07a/330_216_2/07a572d2a3e96356aed57fa3f94ad4b2.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/45d/330_216_2/45d06e7926ea8f6aed2f46292373c19f.JPG"
+            "https://parklon.ru/upload/resize_cache/iblock/7e0/330_216_2/7e05d67cae6eaf6107ae6a0a50d07aa4.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/d96/330_216_2/d9606323e045282c922083767b9019af.jpg"
         ],
         "sizes": [
             {
                 "name": "Размер",
-                "value": "100x140 см"
+                "value": "95x44 см"
             },
             {
                 "name": "Толщина",
-                "value": "0.5 см"
+                "value": "1.2 см"
             },
             {
                 "name": "Материал",
                 "value": "PVC"
             }
         ],
-        "price": "4 900 руб.",
-        "url": "https://parklon.ru/catalog/kovrik_cushion_mat_140_100_0_5_sm_soty/"
+        "price": 3200,
+        "prices": [
+            "3 200 руб."
+        ],
+        "url": "https://parklon.ru/catalog/kovrik_dlya_kukhni_kitchen_mat_modern_95x44x1_2_sm/"
     },
     {
-        "id": "278",
-        "type": "200x140 см,0.5 см,PVC",
-        "line": "signature_dustend",
-        "category": "Детский коврик Signature DustEnd",
-        "title": "Синяя мозаика",
+        "id": "346",
+        "type": "120x44 см,2 см,PVC",
+        "line": "kitchen_mat",
+        "category": "Детский коврик Kitchen Mat",
+        "title": "Модерн",
         "imgs": [
-            "https://parklon.ru/upload/resize_cache/iblock/bd9/330_216_2/bd9cbe18b58f5e273aff972a80f6c81e.jpg",
-            "https://parklon.ru/upload/resize_cache/iblock/e3b/330_216_2/e3bee7762fcd9b6b511283fbb10e4cda.jpg"
+            "https://parklon.ru/upload/resize_cache/iblock/89c/330_216_2/89c7d879190ec518c481788624a8d7b3.jpg",
+            "https://parklon.ru/upload/resize_cache/iblock/6bb/330_216_2/6bba04d9b8de702504570a451b0d4921.png"
         ],
         "sizes": [
             {
                 "name": "Размер",
-                "value": "200x140 см"
+                "value": "120x44 см"
             },
             {
                 "name": "Толщина",
-                "value": "0.5 см"
+                "value": "2 см"
             },
             {
                 "name": "Материал",
                 "value": "PVC"
             }
         ],
-        "price": "25 800 руб.",
-        "url": "https://parklon.ru/catalog/kovrik_signature_dustend_200x140x0_55_sm_sinyaya_mozaika/"
+        "price": 4900,
+        "prices": [
+            "4 165 руб.",
+            "4 900 руб.",
+            "– 15%"
+        ],
+        "discount": 15,
+        "discounted_price": 4165,
+        "url": "https://parklon.ru/catalog/kovrik_dlya_kukhni_kitchen_mat_provans_120x44x2_sm/"
     }
 ]
