@@ -153,11 +153,11 @@ const init_catalog = ()=>{
             +'<div class="w-100">'
             +'<div class="d-flex w-100 justify-content-between">'
             +`<h5 class="mb-1 title">${type.replace(/ /g, '')}</h5>`
-            +`<small class="price">${fmt_int(prod.price)} ₽ `
+            +`<small class="price">`
             +(prod.discount ?
-                `<span class="badge bg-secondary">-${prod.discount}%</span>`
+                `<span class="badge bg-secondary">-${prod.discount}%</span> `
                 : '')
-            +'</small></div>'
+            +`${fmt_int(prod.price)} ₽</small></div>`
             +`<small>${titles}</small></div></div>`
             +'</a>';
     }
@@ -273,7 +273,7 @@ const render_menu = live=>{
             +'</li>';
     }
     $('#menu').html(html);
-    $('#menu').toggleClass('bg-warning bg-gradient', !live);
+    $('#menu').toggleClass('bg-gradient', !live);
     html = '';
     for (const code in sub_menu)
     {
