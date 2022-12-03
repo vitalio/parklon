@@ -273,7 +273,7 @@ const render_menu = live=>{
             +'</li>';
     }
     $('#menu').html(html);
-    $('#menu').toggleClass('bg-warning bg-gradient', !live);
+    $('#menu').toggleClass('bg-gradient', !live);
     html = '';
     for (const code in sub_menu)
     {
