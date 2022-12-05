@@ -234,8 +234,8 @@ export class BaseScrapper {
     select(parsed, selector){
         throw new Error('You have to implement method select');
     }
-    async get_order_data(city_name){
-        let data = await this.get(PARKLON_ORDER_URL);
+    async get_order_data(city_name, opt={}){
+        let data = await this.get(PARKLON_ORDER_URL, opt);
         // disable since new city format doesn't match
         if (false && city_name && !data.includes(city_name))
             throw new Error(`order city mismatch, expect [${city_name}]`);
@@ -251,8 +251,8 @@ export class BaseScrapper {
         if (opt.verbose)
             console.log('+ get_routes <', city_id, city_name, opt);
         await this.post(PARKLON_REGIONS_AJAX_URL,
-            {ACTION: 'CHANGE', ID: ''+city_id});
-        const res = await this.get_order_data(city_name);
+            {ACTION: 'CHANGE', ID: ''+city_id}, null, opt);
+        const res = await this.get_order_data(city_name, opt);
         if (opt.verbose)
             console.log('+ get_routes >', res);
         const routes = res.SaleResult.MARSHROUTE;
@@ -283,9 +283,9 @@ export class BaseScrapper {
         return fetch_json(PARKLON_REGIONS_AJAX_URL,
             {input: 'form', body: {ACTION: 'SEARCH'}});
     }
-    async get_cities(){
+    async get_cities(opt){
         const res = await this.post(PARKLON_REGIONS_AJAX_URL,
-            {ACTION: 'SEARCH'});
+            {ACTION: 'SEARCH'}, null, opt);
         const cities = res && res.searchedresult;
         for (const id in cities)
         {
@@ -295,20 +295,24 @@ export class BaseScrapper {
         return cities;
     }
     // basket
-    async add_to_basket(prod_id){
+    async add_to_basket(prod_id, opt={}){
+        if (opt.verbose)
+            console.log('+ add_to_basket <', prod_id);
         const data = await this.post(PARKLON_ADD_TO_BASKET_URL,
-            {ACTION: 'PUT', id: prod_id, quantity: 1}, {'bx-ajax': 'true'});
+            {ACTION: 'PUT', id: prod_id, quantity: 1},
+            {'bx-ajax': 'true'}, opt);
         if (!data || data.result!='success')
             throw new Error(`failed add to basket prod [${prod_id}]`);
     }
     async del_from_basket(basket_id){
         return this.post(PARKLON_DEL_FROM_BASKET_URL,
-            {basketAction: 'delete', id: basket_id}, {'bx-ajax': 'true'});
+            {basketAction: 'delete', id: basket_id},
+            {'bx-ajax': 'true'}, opt);
     }
     async get_basket_id(opt={}){
         if (opt.verbose)
             console.log('+ get_basket_id <', opt);
-        const res = await this.get_order_data();
+        const res = await this.get_order_data(null, opt);
         if (opt.verbose)
             console.log('+ get_basket_id >', res);
         return Object.keys(res && res.SaleResult && res.SaleResult.GRID
@@ -330,7 +334,7 @@ export class BaseScrapper {
         return lines;
     }
     async get_line_products(line_id, line_url){
-        const data = await this.get(line_url);
+        const data = await this.get(line_url, opt);
         const {$, parsed} = this.parse(data);
         const products = [];
         const get_el_text = el=>el && $(el).text().trim();
@@ -527,7 +531,7 @@ export class Sync {
             console.log(`process type [${type}] ${i}/${types_len}`);
             const prod = type2products[type][0].id;
             console.log(`adding product [${prod}] to basket...`);
-            await this.scrapper.add_to_basket(prod);
+            await this.scrapper.add_to_basket(prod, opt);
             console.log('product added');
             console.log('getting basket ID...');
             const basket_id = await this.scrapper.get_basket_id(opt);
