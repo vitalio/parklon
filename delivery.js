@@ -141,6 +141,8 @@ const set_fatal_error = e=>{
     $('#error').text(e);
     $('#loading, main').hide();
 };
+const set_error = e=>$('#error').text(e);
+const clear_error = ()=>$('#error').empty();
 
 const init_catalog = ()=>{
     let html = '<div class="list-group">';
@@ -194,6 +196,7 @@ async function on_clear(){
     deselect_city();
     await api.wait(250);
     $('#clear').removeClass('process');
+    clear_error();
 }
 
 const deselect_city = do_not_remove_city_val=>{
@@ -263,8 +266,9 @@ async function select_city({label, value}){
         select_menu('all');
         active_city = value;
     } catch(e){
-        set_result(e);
-        console.error(e);
+        set_error(e);
+        hide_result();
+        console.error('failed to select city', label, value, e);
     }
 }
 
@@ -379,6 +383,7 @@ async function load_data(id){
     const start = Date.now();
     if (use_live_routes)
     {
+        clear_error();
         try {
             const res = await fetch_json(LIVE_ROUTES_URL+'?type='+active_type
                 +'&city_id='+id);
@@ -388,7 +393,10 @@ async function load_data(id){
                     api.get_dur(start));
                 return assign(res, {live: true});
             }
-        } catch(e){ console.error('failed to get live routes', e); }
+        } catch(e){
+            set_error(e);
+            console.error('failed to get live routes', e);
+        }
     }
     const res = await restdb.get_instance_by_type(active_type).query('city',
         {id});
