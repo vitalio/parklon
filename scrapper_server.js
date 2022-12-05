@@ -1,9 +1,10 @@
 /*jshint esversion: 8*/
-require = require('esm')(module);
-const api = require('./api/api.js');
-const api_node = require('./api/api_node.js');
-const express = require('express');
-const cors = require('cors');
+import {createRequire} from "module";
+const require = createRequire(import.meta.url);
+import {get_products_by_type} from './api/api.js';
+import api_node from './api/api_node.js';
+import express from 'express';
+import cors from 'cors';
 const cities = require('./data/cities.json');
 const products = require('./data/products.json');
 const PORT = process.env.PORT||80;
@@ -22,7 +23,7 @@ async function init(){
         conf = await config.get_all();
         console.log('use remote conf');
     }
-    type2products = api.get_products_by_type(conf.products);
+    type2products = get_products_by_type(conf.products);
     const app = express();
     app.use(cors());
     app.get('/live_routes', get_live_routes);

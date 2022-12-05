@@ -1,44 +1,48 @@
 /*jshint esversion: 8*/
-require = require('esm')(module);
-const https  = require('https');
-const axios  = require('axios');
-const cheerio = require('cheerio');
-const FormData = require('form-data');
-const axiosCookieJarSupport = require('axios-cookiejar-support').default;
-const tough = require('tough-cookie');
-const fetch = require('node-fetch');
-const api = require('./api.js');
-axiosCookieJarSupport(axios);
-const E = exports;
+import axios from 'axios';
+import {load} from 'cheerio';
+import FormData from 'form-data';
+import {CookieJar} from 'tough-cookie';
+import fetch from 'node-fetch';
+import {HttpsCookieAgent} from 'http-cookie-agent/http';
+import {get_fetch, BaseScrapper, RestDB, BaseRestDBInstance, Conf, Sync} from './api.js';
 
-const {fetch_json} = api.get_fetch(fetch);
+const {fetch_json} = get_fetch(fetch);
 
-class Scrapper extends api.BaseScrapper {
+class Scrapper extends BaseScrapper {
     constructor(){
         super();
-        this.axios_conf = {
-            jar: new tough.CookieJar(),
+        const jar = new CookieJar();
+        this.client = axios.create({
+            // headers: {'Accept-Encoding': 'application/json'},
             withCredentials: true,
-            httpsAgent: new https.Agent({rejectUnauthorized: false}),
-        };
+            httpsAgent: new HttpsCookieAgent({cookies: {jar}, rejectUnauthorized: false}),
+        });
+    }
+    async dummy(){
+        const response = await axios.get('https://google.com',
+            {headers: {'Accept-Encoding': 'application/json'}});
+        console.log(response);
     }
     async get(url, opt={}){
         if (opt.verbose)
             console.log('GET', url);
-        const {data} = await axios.get(url, this.axios_conf);
+        const {data} = await this.client.get(url);
         return data;
     }
-    async post(url, body, headers){
+    async post(url, body, headers, opt={}){
         const fd = new FormData();
         for (const k in body)
             fd.append(k, body[k]);
-        const {data} = await axios.post(url, fd, Object.assign({
+        if (opt.verbose)
+            console.log('POST', url, body);
+        const res = await this.client.post(url, fd, Object.assign({
             headers: Object.assign(fd.getHeaders(), headers),
-        }, this.axios_conf));
-        return data;
+        }));
+        return res.data;
     }
     parse(data){
-        const $ = cheerio.load(data);
+        const $ = load(data);
         return {$, parsed: $};
     }
     select($, selector){
@@ -47,15 +51,15 @@ class Scrapper extends api.BaseScrapper {
 }
 
 const init = ()=>{
-    const restdb = new api.RestDB(class extends api.BaseRestDBInstance {
+    const restdb = new RestDB(class extends BaseRestDBInstance {
         async fetch_json(url, opt){
             return fetch_json(url, opt);
         }
     });
-    const config = new api.Conf(restdb);
+    const config = new Conf(restdb);
     const scrapper = new Scrapper();
-    const sync = new api.Sync(scrapper, restdb);
+    const sync = new Sync(scrapper, restdb);
     return {restdb, config, scrapper, sync};
 };
 
-module.exports = {Scrapper, init};
+export default {Scrapper, init};
