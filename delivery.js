@@ -2,7 +2,7 @@
 import * as api from "./api/api.js";
 
 const DAYS_ADD = 3;
-const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes1';
+const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
 const USE_LIVE_ROUTES = true;
 const USE_LOCAL_CONF = true;
 const {assign} = Object;
