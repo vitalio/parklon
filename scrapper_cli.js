@@ -1,10 +1,12 @@
 /*jshint esversion: 8*/
-require = require('esm')(module);
-const getopts = require('getopts');
-const api = require('./api/api.js');
-const {restdb, config, scrapper, sync} = require('./api/api_node.js').init();
+import {createRequire} from "module";
+const require = createRequire(import.meta.url);
+import getopts from 'getopts';
+import {PRODUCT_TYPE_TO_RESTDB_INSTANCE, get_products_by_type} from './api/api.js';
+import api_node from './api/api_node.js';
 const cities = require('./data/cities.json');
 const products = require('./data/products.json');
+const {restdb, config, scrapper, sync} = api_node.init();
 
 const help = `Usage: node --max-http-header-size 15000 scrapper_cli.js [options] [command] [params]
 
@@ -18,6 +20,8 @@ Options:
   -h, --help            show usage
 
 Commands:
+  dummy
+  get                   url
   sync_delivery
   sync_products
   sync_cities
@@ -57,6 +61,12 @@ async function main(){
     const [cmd, arg1, arg2] = opt._;
     switch (cmd)
     {
+    case 'get':
+        console.log(await scrapper.get(arg1, opt));
+        break;
+    case 'dummy':
+        await scrapper.dummy();
+        break;
     case 'sync_delivery':
     case 'sync_products':
     case 'sync_cities':
@@ -71,10 +81,10 @@ async function main(){
             break;
         }
     case 'get_cities':
-        print_json(await scrapper.get_cities());
+        print_json(await scrapper.get_cities(opt));
         break;
     case 'add_to_basket':
-        print_json(await scrapper.add_to_basket(arg1));
+        print_json(await scrapper.add_to_basket(arg1, opt));
         break;
     case 'get_basket_id':
         console.log(await scrapper.get_basket_id(opt));
@@ -99,7 +109,7 @@ async function main(){
         break;
     case 'get_total':
         {
-            const db = api.PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1] ?
+            const db = PRODUCT_TYPE_TO_RESTDB_INSTANCE[arg1] ?
                 restdb.get_instance_by_type(arg1) : restdb.get_instance(arg1);
             console.log(await db.get_total(arg2||'city'));
             break;
@@ -109,9 +119,9 @@ async function main(){
             const type = arg1, city = arg2;
             const conf = opt.config ? await config.get_all()
                 : {cities, products};
-            const type2products = api.get_products_by_type(conf.products);
+            const type2products = get_products_by_type(conf.products);
             const prod = type2products[type][0].id;
-            await scrapper.add_to_basket(prod);
+            await scrapper.add_to_basket(prod, opt);
             const res = await scrapper.get_routes(city, conf.cities[city],
                 opt);
             print_json(res);
@@ -122,5 +132,4 @@ async function main(){
     }
 }
 
-if (require.main==module)
-    main();
+main();
