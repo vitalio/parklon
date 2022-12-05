@@ -27,7 +27,7 @@ if (use_live_routes)
 
 let active_type = '200x140 см,1 см,PE';
 let menu, sub_menu, active_menu_code, active_sub_menu_code;
-let active_blob, active_city, chosen_city, city_items = [];
+let active_blob, active_city, chosen_city, chosen_city_name, city_items = [];
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
@@ -84,8 +84,15 @@ async function init(){
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
-        $('main').delegate('#city', 'blur',
-            ()=>setTimeout(()=>$('.dropdown-menu').removeClass('show'), 250));
+        $('main').delegate('#city', 'blur', ()=>{
+            setTimeout(()=>$('.dropdown-menu').removeClass('show'), 250);
+            if (chosen_city_name)
+                $('#city').val(chosen_city_name);
+        });
+        $('main').delegate('#city', 'focus', ()=>{
+            if (chosen_city_name)
+                $('#city').val('');
+        });
         $('main').show();
         if (active_type)
             select_type(active_type);
@@ -209,7 +216,8 @@ const deselect_city = do_not_remove_city_val=>{
     hide_result();
     city_items = [];
     active_city = null;
-    chosen_city = null
+    chosen_city = null;
+    chosen_city_name = null;
 };
 
 async function select_city({label, value}){
@@ -225,6 +233,7 @@ async function select_city({label, value}){
     set_result('Loading...');
     show_result();
     chosen_city = value;
+    chosen_city_name = label;
     try {
         const data = window.ROUTES ? {routes: window.ROUTES}
             : (await load_data(value));
