@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/vitalio/parklon/issues"
   },
-  "homepage": "https://github.com/vitalio/parklon#readme"
+  "homepage": "https://github.com/vitalio/parklon#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }
