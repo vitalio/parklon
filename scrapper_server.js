@@ -12,16 +12,16 @@ const PORT = process.env.PORT||80;
 let conf, type2products;
 
 async function init(){
-    if (+process.env.USE_LOCAL_CONF)
-    {
-        conf = {cities, products};
-        console.log('use local conf');
-    }
-    else
+    if (+process.env.USE_REMOTE_CONF)
     {
         const {config} = api_node.init();
         conf = await config.get_all();
         console.log('use remote conf');
+    }
+    else
+    {
+        conf = {cities, products};
+        console.log('use local conf');
     }
     type2products = get_products_by_type(conf.products);
     const app = express();
