@@ -27,7 +27,7 @@ if (use_live_routes)
 
 let active_type = '200x140 см,1 см,PE';
 let menu, sub_menu, active_menu_code, active_sub_menu_code;
-let active_blob, active_city, city_items = [];
+let active_blob, active_city, chosen_city, chosen_city_name, city_items = [];
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
@@ -84,6 +84,15 @@ async function init(){
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
+        $('main').delegate('#city', 'blur', ()=>{
+            setTimeout(()=>$('.dropdown-menu').removeClass('show'), 250);
+            if (chosen_city_name)
+                $('#city').val(chosen_city_name);
+        });
+        $('main').delegate('#city', 'focus', ()=>{
+            if (chosen_city_name)
+                $('#city').val('');
+        });
         $('main').show();
         if (active_type)
             select_type(active_type);
@@ -139,6 +148,8 @@ const set_fatal_error = e=>{
     $('#error').text(e);
     $('#loading, main').hide();
 };
+const set_error = e=>$('#error').text(e);
+const clear_error = ()=>$('#error').empty();
 
 const init_catalog = ()=>{
     let html = '<div class="list-group">';
@@ -188,23 +199,25 @@ const select_type = type=>{
 };
 
 async function on_clear(){
-    if (!active_city)
-        return;
     $('#clear').addClass('process');
     deselect_city();
     await api.wait(250);
     $('#clear').removeClass('process');
+    clear_error();
 }
 
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
+    $('.dropdown-menu').removeClass('show');
     clear_screen();
     if (!do_not_remove_city_val)
         $('#city').val('');
-    clear_result();
+    hide_result();
     city_items = [];
     active_city = null;
+    chosen_city = null;
+    chosen_city_name = null;
 };
 
 async function select_city({label, value}){
@@ -218,9 +231,14 @@ async function select_city({label, value}){
         return;
     deselect_city(true);
     set_result('Loading...');
+    show_result();
+    chosen_city = value;
+    chosen_city_name = label;
     try {
         const data = window.ROUTES ? {routes: window.ROUTES}
             : (await load_data(value));
+        if (value!=chosen_city)
+            return;
         if (!data)
             throw new Error(`no data for city id ${value}`);
         const {routes, live} = data;
@@ -257,8 +275,9 @@ async function select_city({label, value}){
         select_menu('all');
         active_city = value;
     } catch(e){
-        set_result(e);
-        console.error(e);
+        set_error(e);
+        hide_result();
+        console.error('failed to select city', label, value, e);
     }
 }
 
@@ -373,6 +392,7 @@ async function load_data(id){
     const start = Date.now();
     if (use_live_routes)
     {
+        clear_error();
         try {
             const res = await fetch_json(LIVE_ROUTES_URL+'?type='+active_type
                 +'&city_id='+id);
@@ -382,7 +402,10 @@ async function load_data(id){
                     api.get_dur(start));
                 return assign(res, {live: true});
             }
-        } catch(e){ console.error('failed to get live routes', e); }
+        } catch(e){
+            set_error(e);
+            console.error('failed to get live routes', e);
+        }
     }
     const res = await restdb.get_instance_by_type(active_type).query('city',
         {id});
@@ -391,8 +414,9 @@ async function load_data(id){
 }
 
 const set_result = html=>$('#result').html(html);
-
 const clear_result = ()=>$('#result').empty();
+const hide_result = ()=>$('.result').hide();
+const show_result = ()=>$('.result').show();
 
 async function on_copy(){
     if (!city_items.length)
