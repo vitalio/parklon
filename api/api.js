@@ -333,7 +333,7 @@ export class BaseScrapper {
         });
         return lines;
     }
-    async get_line_products(line_id, line_url){
+    async get_line_products(line_id, line_url, opt){
         const data = await this.get(line_url, opt);
         const {$, parsed} = this.parse(data);
         const products = [];
@@ -386,7 +386,7 @@ export class BaseScrapper {
         for (const line of lines)
         {
             Array.prototype.push.apply(products,
-                await this.get_line_products(line.id, line.url));
+                await this.get_line_products(line.id, line.url, opt));
         }
         return products;
     }
@@ -425,7 +425,7 @@ export class Sync {
         {
             console.log(`getting products for [${line.id}]...`);
             const _products = await this.scrapper.get_line_products(line.id,
-                line.url);
+                line.url, opt);
             _products.forEach(p=>{
                 if (!types.includes(p.type))
                     types.push(p.type);
