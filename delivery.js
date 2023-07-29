@@ -81,6 +81,7 @@ async function init(){
             const sub_menu_code = el.data('sub-menu');
             select_menu(menu_code, sub_menu_code);
         });
+        $('main').delegate('#reload', 'click', on_reload);
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
@@ -206,6 +207,14 @@ async function on_clear(){
     clear_error();
 }
 
+async function on_reload(){
+    $('#reload').addClass('process');
+    await select_city({label: chosen_city_name, value: chosen_city,
+        force: true});
+    await api.wait(250);
+    $('#reload').removeClass('process');
+}
+
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
@@ -220,8 +229,8 @@ const deselect_city = do_not_remove_city_val=>{
     chosen_city_name = null;
 };
 
-async function select_city({label, value}){
-    if (active_city==value)
+async function select_city({label, value, force}){
+    if (active_city==value && !force)
         return;
     city_items = [];
     menu = {all: {label: 'Все', code: 'all', count: 0}};
