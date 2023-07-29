@@ -2,6 +2,7 @@
 import * as api from "./api/api.js";
 
 const DAYS_ADD = 3;
+const RETRY = 2;
 const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
 const USE_LIVE_ROUTES = true;
 const USE_LOCAL_CONF = true;
@@ -81,6 +82,7 @@ async function init(){
             const sub_menu_code = el.data('sub-menu');
             select_menu(menu_code, sub_menu_code);
         });
+        $('main').delegate('#reload', 'click', on_reload);
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
@@ -206,6 +208,14 @@ async function on_clear(){
     clear_error();
 }
 
+async function on_reload(){
+    $('#reload').addClass('process');
+    await select_city({label: chosen_city_name, value: chosen_city,
+        force: true});
+    await api.wait(250);
+    $('#reload').removeClass('process');
+}
+
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
@@ -220,8 +230,8 @@ const deselect_city = do_not_remove_city_val=>{
     chosen_city_name = null;
 };
 
-async function select_city({label, value}){
-    if (active_city==value)
+async function select_city({label, value, force}){
+    if (active_city==value && !force)
         return;
     city_items = [];
     menu = {all: {label: 'Все', code: 'all', count: 0}};
@@ -235,14 +245,23 @@ async function select_city({label, value}){
     chosen_city = value;
     chosen_city_name = label;
     try {
-        const data = window.ROUTES ? {routes: window.ROUTES}
-            : (await load_data(value));
-        if (value!=chosen_city)
-            return;
-        if (!data)
-            throw new Error(`no data for city id ${value}`);
+        let try_n = window.ROUTES ? 1 : RETRY+1;
+        let data;
+        for (let i=0; i<try_n; i++)
+        {
+            if (i>0)
+                console.log('retry', i, 'of', RETRY);
+            data = window.ROUTES ? {routes: window.ROUTES}
+                : (await load_data(value));
+            if (value!=chosen_city)
+                return;
+            if (!data)
+                throw new Error(`no data for city id ${value}`);
+            if (data.routes.COURIER?.length || data.routes.PVZ_ALL?.length)
+                break;
+        }
         const {routes, live} = data;
-        if (routes.COURIER && routes.COURIER.length)
+        if (routes.COURIER?.length)
         {
             menu.courier = {label: 'Курьер', code: 'courier', count: 0};
             routes.COURIER.forEach(item=>{
@@ -251,7 +270,7 @@ async function select_city({label, value}){
                 menu.courier.count++;
             });
         }
-        if (routes.PVZ_ALL && routes.PVZ_ALL.length)
+        if (routes.PVZ_ALL?.length)
         {
             menu.pvz = {label: 'Самовывоз', code: 'pvz', count: 0,
                 sub_menu: true};
