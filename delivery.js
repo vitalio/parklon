@@ -128,7 +128,7 @@ function on_days_add(){
 
 const parse_days_add = days=>{
     days = parseInt(days);
-    return !days || days<0 || days>3 ? 0 : days;
+    return !days || days<0 || days>5 ? 0 : days;
 };
 
 async function on_screen(){
