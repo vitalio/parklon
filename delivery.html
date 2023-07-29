@@ -28,9 +28,11 @@
   </article>
   <main class="container">
     <article class="mb-2" id="catalog"></article>
+    <article class="mb-2">
+      <input id="city" type="text" class="form-control" placeholder="Город" id="city">
+    </article>
     <article id="delivery">
       <div class="d-flex">
-        <input id="city" type="text" class="form-control me-2" placeholder="Город" id="city">
         <button id="reload" class="btn btn-light border-dark me-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -56,6 +58,12 @@
             <path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
           </svg>
         </button>
+        <select id="days_add" class="form-select border-dark ms-2" aria-label="Default select example">
+          <option value="0">+ 0 дней доставки</option>
+          <option value="1">+ 1 день доставки</option>
+          <option value="2">+ 2 дня доставки</option>
+          <option value="3">+ 3 дня доставки</option>
+        </select>
       </div>
       <div class="result">
         <ul class="nav nav-tabs" id="menu"></ul>
