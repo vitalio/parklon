@@ -86,6 +86,7 @@ async function init(){
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
+        $('main').delegate('table tr', 'click', on_line_copy);
         $('main').delegate('#city', 'blur', ()=>{
             setTimeout(()=>$('.dropdown-menu').removeClass('show'), 250);
             if (chosen_city_name)
@@ -285,7 +286,7 @@ async function select_city({label, value, force}){
                     {menu: 'pvz', sub_menu: code, live}));
                 if (sub_menu[code])
                     return sub_menu[code].count++;
-                const label = item.name.substr(10);
+                const label = item.name.substring(10);
                 sub_menu[code] = {label, code, count: 1, parent_code: 'pvz',
                     live};
             });
@@ -379,7 +380,7 @@ const get_item_data = item=>{
     d.setDate(d.getDate()+days);
     const day = d.getDate();
     const month = d.getMonth()+1;
-    const year = (''+d.getFullYear()).substr(2);
+    const year = (''+d.getFullYear()).substring(2);
     const date = format(day)+'.'+format(month)+'.'+format(year);
     let address = item.address||item.name||'';
     address = (''+address).replace(/&nbsp;/g, ' ');
@@ -436,6 +437,20 @@ const set_result = html=>$('#result').html(html);
 const clear_result = ()=>$('#result').empty();
 const hide_result = ()=>$('.result').hide();
 const show_result = ()=>$('.result').show();
+
+async function on_line_copy(){
+    const el = $(this);
+    if (!el)
+        return;
+    let text = el[0].innerText;
+    window.ell = el;
+    el.addClass('copied');
+    text = text.substring(text.indexOf('\t')).replaceAll('\t', ' ').trim();
+    await navigator.clipboard.writeText(text);
+    console.log('copied', text);
+    await api.wait(250);
+    el.removeClass('copied');
+}
 
 async function on_copy(){
     if (!city_items.length)
