@@ -447,7 +447,7 @@ async function on_line_copy(){
     el.addClass('copied');
     text = text.substring(text.indexOf('\t')).replaceAll('\t', ' ').trim();
     await navigator.clipboard.writeText(text);
-    console.log('copied', text);
+    console.log('copied:', text);
     await api.wait(250);
     el.removeClass('copied');
 }
