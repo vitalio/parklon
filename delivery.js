@@ -2,6 +2,7 @@
 import * as api from "./api/api.js";
 
 const DAYS_ADD = 3;
+const RETRY = 2;
 const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
 const USE_LIVE_ROUTES = true;
 const USE_LOCAL_CONF = true;
@@ -244,14 +245,23 @@ async function select_city({label, value, force}){
     chosen_city = value;
     chosen_city_name = label;
     try {
-        const data = window.ROUTES ? {routes: window.ROUTES}
-            : (await load_data(value));
-        if (value!=chosen_city)
-            return;
-        if (!data)
-            throw new Error(`no data for city id ${value}`);
+        let try_n = window.ROUTES ? 1 : RETRY+1;
+        let data;
+        for (let i=0; i<try_n; i++)
+        {
+            if (i>0)
+                console.log('retry', i, 'of', RETRY);
+            data = window.ROUTES ? {routes: window.ROUTES}
+                : (await load_data(value));
+            if (value!=chosen_city)
+                return;
+            if (!data)
+                throw new Error(`no data for city id ${value}`);
+            if (data.routes.COURIER?.length || data.routes.PVZ_ALL?.length)
+                break;
+        }
         const {routes, live} = data;
-        if (routes.COURIER && routes.COURIER.length)
+        if (routes.COURIER?.length)
         {
             menu.courier = {label: 'Курьер', code: 'courier', count: 0};
             routes.COURIER.forEach(item=>{
@@ -260,7 +270,7 @@ async function select_city({label, value, force}){
                 menu.courier.count++;
             });
         }
-        if (routes.PVZ_ALL && routes.PVZ_ALL.length)
+        if (routes.PVZ_ALL?.length)
         {
             menu.pvz = {label: 'Самовывоз', code: 'pvz', count: 0,
                 sub_menu: true};
