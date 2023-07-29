@@ -388,7 +388,7 @@ const get_item_data = item=>{
 };
 
 const render_result_html = (menu_code, sub_menu_code)=>{
-    let html = '<table class="table table-sm table-striped">';
+    let html = '<table class="table table-sm table-striped table-hover">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
         const {address, date, cost} = get_item_data(item);
         const price = cost ? cost+'₽' : 'бесплатно';
