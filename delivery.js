@@ -1,7 +1,7 @@
 /*jshint esversion: 8*/
 import * as api from "./api/api.js";
 
-const DAYS_ADD = 3;
+const RETRY = 2;
 const LIVE_ROUTES_URL = 'https://parklon.herokuapp.com/live_routes';
 const USE_LIVE_ROUTES = true;
 const USE_LOCAL_CONF = true;
@@ -28,6 +28,7 @@ if (use_live_routes)
 let active_type = '200x140 см,1 см,PE';
 let menu, sub_menu, active_menu_code, active_sub_menu_code;
 let active_blob, active_city, chosen_city, chosen_city_name, city_items = [];
+let days_add;
 
 class RestDBInstance extends api.BaseRestDBInstance {
     async fetch_json(url, opt){
@@ -81,9 +82,12 @@ async function init(){
             const sub_menu_code = el.data('sub-menu');
             select_menu(menu_code, sub_menu_code);
         });
+        $('main').delegate('#reload', 'click', on_reload);
         $('main').delegate('#copy', 'click', on_copy);
         $('main').delegate('#clear', 'click', on_clear);
         $('main').delegate('#screen', 'click', on_screen);
+        $('main').delegate('table tr', 'click', on_line_copy);
+        $('main').delegate('#days_add', 'change', on_days_add);
         $('main').delegate('#city', 'blur', ()=>{
             setTimeout(()=>$('.dropdown-menu').removeClass('show'), 250);
             if (chosen_city_name)
@@ -99,6 +103,11 @@ async function init(){
         else
             deselect_type();
         $('#loading').hide();
+        days_add = localStorage.getItem('days_add');
+        console.log('local storage days add', days_add);
+        days_add = parse_days_add(days_add);
+        console.log('init days add', days_add);
+        $('#days_add').val(days_add);
         /* const scrapper = new Scrapper(custom_fetch);
         const sync = new api.Sync(scrapper, restdb);
         await sync.sync_delivery(); */
@@ -106,6 +115,21 @@ async function init(){
         set_fatal_error(e);
     }
 }
+
+function on_days_add(){
+    days_add = parse_days_add($(this).val());
+    console.log('set days add', days_add);
+    localStorage.setItem('days_add', days_add);
+    if (!active_city)
+        return;
+    clear_screen();
+    set_result(render_result_html(active_menu_code, active_sub_menu_code));
+}
+
+const parse_days_add = days=>{
+    days = parseInt(days);
+    return !days || days<0 || days>5 ? 0 : days;
+};
 
 async function on_screen(){
     if (!city_items.length)
@@ -206,6 +230,14 @@ async function on_clear(){
     clear_error();
 }
 
+async function on_reload(){
+    $('#reload').addClass('process');
+    await select_city({label: chosen_city_name, value: chosen_city,
+        force: true});
+    await api.wait(250);
+    $('#reload').removeClass('process');
+}
+
 const deselect_city = do_not_remove_city_val=>{
     $('#menu').empty();
     $('#sub_menu').empty();
@@ -220,8 +252,8 @@ const deselect_city = do_not_remove_city_val=>{
     chosen_city_name = null;
 };
 
-async function select_city({label, value}){
-    if (active_city==value)
+async function select_city({label, value, force}){
+    if (active_city==value && !force)
         return;
     city_items = [];
     menu = {all: {label: 'Все', code: 'all', count: 0}};
@@ -235,14 +267,23 @@ async function select_city({label, value}){
     chosen_city = value;
     chosen_city_name = label;
     try {
-        const data = window.ROUTES ? {routes: window.ROUTES}
-            : (await load_data(value));
-        if (value!=chosen_city)
-            return;
-        if (!data)
-            throw new Error(`no data for city id ${value}`);
+        let try_n = window.ROUTES ? 1 : RETRY+1;
+        let data;
+        for (let i=0; i<try_n; i++)
+        {
+            if (i>0)
+                console.log('retry', i, 'of', RETRY);
+            data = window.ROUTES ? {routes: window.ROUTES}
+                : (await load_data(value));
+            if (value!=chosen_city)
+                return;
+            if (!data)
+                throw new Error(`no data for city id ${value}`);
+            if (data.routes.COURIER?.length || data.routes.PVZ_ALL?.length)
+                break;
+        }
         const {routes, live} = data;
-        if (routes.COURIER && routes.COURIER.length)
+        if (routes.COURIER?.length)
         {
             menu.courier = {label: 'Курьер', code: 'courier', count: 0};
             routes.COURIER.forEach(item=>{
@@ -251,7 +292,7 @@ async function select_city({label, value}){
                 menu.courier.count++;
             });
         }
-        if (routes.PVZ_ALL && routes.PVZ_ALL.length)
+        if (routes.PVZ_ALL?.length)
         {
             menu.pvz = {label: 'Самовывоз', code: 'pvz', count: 0,
                 sub_menu: true};
@@ -266,7 +307,7 @@ async function select_city({label, value}){
                     {menu: 'pvz', sub_menu: code, live}));
                 if (sub_menu[code])
                     return sub_menu[code].count++;
-                const label = item.name.substr(10);
+                const label = item.name.substring(10);
                 sub_menu[code] = {label, code, count: 1, parent_code: 'pvz',
                     live};
             });
@@ -355,12 +396,12 @@ menu_code=='all' ? city_items : city_items.filter(item=>{
 });
 
 const get_item_data = item=>{
-    const days = (+item.days||0)+(item.live ? 0 : DAYS_ADD);
+    const days = (+item.days||0)+days_add;
     const d = new Date();
     d.setDate(d.getDate()+days);
     const day = d.getDate();
     const month = d.getMonth()+1;
-    const year = (''+d.getFullYear()).substr(2);
+    const year = (''+d.getFullYear()).substring(2);
     const date = format(day)+'.'+format(month)+'.'+format(year);
     let address = item.address||item.name||'';
     address = (''+address).replace(/&nbsp;/g, ' ');
@@ -369,7 +410,7 @@ const get_item_data = item=>{
 };
 
 const render_result_html = (menu_code, sub_menu_code)=>{
-    let html = '<table class="table table-sm table-striped">';
+    let html = '<table class="table table-sm table-striped table-hover">';
     html += get_items(menu_code, sub_menu_code).map((item, i)=>{
         const {address, date, cost} = get_item_data(item);
         const price = cost ? cost+'₽' : 'бесплатно';
@@ -417,6 +458,19 @@ const set_result = html=>$('#result').html(html);
 const clear_result = ()=>$('#result').empty();
 const hide_result = ()=>$('.result').hide();
 const show_result = ()=>$('.result').show();
+
+async function on_line_copy(){
+    const el = $(this);
+    if (!el)
+        return;
+    let text = el[0].innerText;
+    el.addClass('copied');
+    text = text.substring(text.indexOf('\t')).trim().replaceAll('\t', ', ');
+    await navigator.clipboard.writeText(text);
+    console.log('copied:', text);
+    await api.wait(250);
+    el.removeClass('copied');
+}
 
 async function on_copy(){
     if (!city_items.length)

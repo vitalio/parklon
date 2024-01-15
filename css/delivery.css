@@ -24,4 +24,4 @@ button.waiting {
     background-color: #212529!important;
     color: #fff!important;
 }
-button.process { background-color: #ffc107!important; }
+button.process, tr.copied { background-color: #ffc107!important; }
